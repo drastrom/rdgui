@@ -17,6 +17,9 @@ submodpaths.add_to_path()
 from numpy_ringbuffer import RingBuffer
 import rd6006
 
+MOCK_DATA=True
+POLLING_INTERVAL=0.25
+GRAPH_SECONDS=60.0
 
 def emitter(p=0.1):
     """Return a random value in [0, 1) with probability p, else 0."""
@@ -34,8 +37,8 @@ class ReaderThread(threading.Thread):
         self.running = True
         self.datalock = threading.Lock()
         self.shutdowncond = threading.Condition(self.datalock)
-        self.t = RingBuffer(200, float)
-        self.d = RingBuffer(200, float)
+        self.t = RingBuffer(int(GRAPH_SECONDS/POLLING_INTERVAL), float)
+        self.d = RingBuffer(int(GRAPH_SECONDS/POLLING_INTERVAL), float)
 
     def cancel(self):
         with self.datalock:
@@ -43,16 +46,23 @@ class ReaderThread(threading.Thread):
             self.shutdowncond.notify()
 
     def run(self):
-        rd = rd6006.RD6006(self.port)
+        if MOCK_DATA:
+            gen = emitter()
+        else:
+            rd = rd6006.RD6006(self.port)
         while self.running:
             a = time()
-            v = rd.measvoltage
+            if MOCK_DATA:
+                v = next(gen)
+            else:
+                v = rd.measvoltage
             t = time()
-            print (t - a)
+            #print (t - a)
             with self.datalock:
                 self.t.append(t)
                 self.d.append(v)
-                self.shutdowncond.wait(max((t + 0.05) - time(), 0))
+                if self.running:
+                    self.shutdowncond.wait(max((a + POLLING_INTERVAL) - time(), 0))
 
 class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
     def __init__(self, parent):
@@ -103,7 +113,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         self.line = Line2D(self.reader.t, self.reader.d)
         axes.add_line(self.line)
         axes.set_ylim(-.1, 5.1)
-        axes.set_xlim(-10, 0)
+        axes.set_xlim(-GRAPH_SECONDS, 0)
 
         axes.set_xlabel('t')
         axes.set_ylabel('V')
@@ -118,7 +128,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         self.MinSize = self.Size
         self.reader.start()
         self.ani = animation.FuncAnimation(self.figure, self.update,
-                interval=50, blit=True)
+                interval=int(POLLING_INTERVAL*1000), blit=True)
 
     def UpdateStatusBar(self, event):
         if event.inaxes:
