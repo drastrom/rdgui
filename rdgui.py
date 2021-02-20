@@ -65,7 +65,6 @@ class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
         self.EndModal(wx.ID_CANCEL)
 
     def OnButton_wxID_OK(self, evt):
-        self.ID_COMPORT_LIST.GetFirstSelected()
         sel = self.ID_COMPORT_LIST.GetFirstSelected()
         if (sel != -1):
             self.port = self.ID_COMPORT_LIST.GetItemText(sel)
