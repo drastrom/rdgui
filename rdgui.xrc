@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<resource class="wxMenuItem">
+<resource class="wxStatusBar">
   <object class="wxFrame" name="CanvasFrame">
     <object class="wxMenuBar">
       <object class="wxMenu" name="wxID_FILE">
@@ -22,7 +22,9 @@
         <flag>wxTOP|wxLEFT|wxGROW</flag>
       </object>
     </object>
-    <object class="wxStatusBar"/>
+    <object class="wxStatusBar">
+      <style>wxST_SIZEGRIP</style>
+    </object>
     <size>550,350</size>
     <title>CanvasFrame</title>
     <XRCED>

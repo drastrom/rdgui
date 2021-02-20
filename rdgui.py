@@ -72,7 +72,10 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
             'motion_notify_event', self.UpdateStatusBar)
 
         self.Fit()
+        self.MinSize = self.Size
         self.reader.start()
+        self.ani = animation.FuncAnimation(self.figure, self.update,
+                interval=50, blit=True)
 
     def UpdateStatusBar(self, event):
         if event.inaxes:
@@ -99,10 +102,6 @@ class App(wx.App):
         """Create the main window and insert the custom frame."""
         frame = CanvasFrame()
         self.SetTopWindow(frame)
-        # pass a generator in "emitter" to produce data for the update func
-        self.ani = animation.FuncAnimation(frame.figure, frame.update,
-                interval=50, blit=True)
-
         frame.Show(True)
         return True
 
