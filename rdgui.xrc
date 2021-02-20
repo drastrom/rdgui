@@ -25,5 +25,8 @@
     <object class="wxStatusBar"/>
     <size>550,350</size>
     <title>CanvasFrame</title>
+    <XRCED>
+      <events>EVT_CLOSE</events>
+    </XRCED>
   </object>
 </resource>
