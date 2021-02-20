@@ -15,6 +15,7 @@ import submodpaths
 submodpaths.add_to_path()
 
 from numpy_ringbuffer import RingBuffer
+import rd6006
 
 
 def emitter(p=0.1):
@@ -42,12 +43,15 @@ class ReaderThread(threading.Thread):
             self.shutdowncond.notify()
 
     def run(self):
-        gen = emitter()
-        with self.datalock:
-            while self.running:
-                t = time()
+        rd = rd6006.RD6006(self.port)
+        while self.running:
+            a = time()
+            v = rd.measvoltage
+            t = time()
+            print (t - a)
+            with self.datalock:
                 self.t.append(t)
-                self.d.append(next(gen))
+                self.d.append(v)
                 self.shutdowncond.wait(max((t + 0.05) - time(), 0))
 
 class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
@@ -98,7 +102,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         axes = self.figure.add_subplot(111)
         self.line = Line2D(self.reader.t, self.reader.d)
         axes.add_line(self.line)
-        axes.set_ylim(-.1, 1.1)
+        axes.set_ylim(-.1, 5.1)
         axes.set_xlim(-10, 0)
 
         axes.set_xlabel('t')
