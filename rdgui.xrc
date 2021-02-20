@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource class="wxMenuItem">
+  <object class="wxFrame" name="CanvasFrame">
+    <object class="wxMenuBar">
+      <object class="wxMenu" name="wxID_FILE">
+        <object class="wxMenuItem" name="wxID_EXIT">
+          <label>E&amp;xit</label>
+          <bitmap stock_id="wxART_QUIT"/>
+          <accel platform="win">Alt-F4</accel>
+          <XRCED>
+            <events>EVT_MENU</events>
+          </XRCED>
+        </object>
+        <label>&amp;File</label>
+      </object>
+    </object>
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="unknown" name="ID_FIGURE"/>
+        <option>1</option>
+        <flag>wxTOP|wxLEFT|wxGROW</flag>
+      </object>
+    </object>
+    <object class="wxStatusBar"/>
+    <size>550,350</size>
+    <title>CanvasFrame</title>
+  </object>
+</resource>

@@ -1,0 +1,9 @@
+[submodule "rd6006"]
+	path = rd6006
+	url = https://github.com/Baldanos/rd6006.git
+[submodule "riden-flashtool"]
+	path = riden-flashtool
+	url = https://github.com/tjko/riden-flashtool.git
+[submodule "numpy_ringbuffer"]
+	path = numpy_ringbuffer
+	url = https://github.com/jeremyd2019/numpy_ringbuffer.git

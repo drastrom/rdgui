@@ -1,0 +1,2 @@
+[MASTER]
+init-hook="import imp, os; from pylint.config import PYLINTRC; imp.load_source('submodpaths', os.path.join(os.path.dirname(PYLINTRC), "submodpaths.py")); submodpaths.add_to_path()"

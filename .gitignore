@@ -1,0 +1,4 @@
+__pycache__
+.vscode
+*.py[co]
+*_xrc.py
