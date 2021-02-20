@@ -27,8 +27,9 @@ def emitter(p=0.1):
             yield np.random.rand(1)
 
 class ReaderThread(threading.Thread):
-    def __init__(self):
+    def __init__(self, port):
         super(ReaderThread, self).__init__(daemon=True)
+        self.port = port
         self.running = True
         self.datalock = threading.Lock()
         self.shutdowncond = threading.Condition(self.datalock)
@@ -49,11 +50,50 @@ class ReaderThread(threading.Thread):
                 self.d.append(next(gen))
                 self.shutdowncond.wait(max((t + 0.05) - time(), 0))
 
+class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
+    def __init__(self, parent):
+        super(DlgPortSelector, self).__init__(parent)
+        self.ID_COMPORT_LIST.AppendColumn("port")
+        self.ID_COMPORT_LIST.AppendColumn("desc", width=150)
+        self.ID_COMPORT_LIST.AppendColumn("hwid", width=200)
+        import serial.tools.list_ports
+        for port, desc, hwid in serial.tools.list_ports.comports():
+            self.ID_COMPORT_LIST.Append((port, desc, hwid))
+        self.wxID_OK.Enable(False)
+
+    def OnButton_wxID_CANCEL(self, evt):
+        self.EndModal(wx.ID_CANCEL)
+
+    def OnButton_wxID_OK(self, evt):
+        self.ID_COMPORT_LIST.GetFirstSelected()
+        sel = self.ID_COMPORT_LIST.GetFirstSelected()
+        if (sel != -1):
+            self.port = self.ID_COMPORT_LIST.GetItemText(sel)
+            self.EndModal(wx.ID_OK)
+
+    def OnList_item_deselected_ID_COMPORT_LIST(self, evt):
+        self.wxID_OK.Enable(False)
+
+    def OnList_item_selected_ID_COMPORT_LIST(self, evt):
+        self.wxID_OK.Enable(True)
+
+    def OnList_item_activated_ID_COMPORT_LIST(self, evt):
+        self.port = evt.Text
+        self.EndModal(wx.ID_OK)
+
 class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
     def __init__(self, parent=None):
         super(CanvasFrame, self).__init__(parent)
 
-        self.reader = ReaderThread()
+        config = wx.Config.Get()
+        port = config.Read("port")
+        if port == "":
+            dlg = DlgPortSelector(self)
+            if dlg.ShowModal() == wx.ID_OK:
+                port = dlg.port
+                config.Write("port", port)
+
+        self.reader = ReaderThread(port)
 
         self.figure = Figure()
         axes = self.figure.add_subplot(111)
@@ -89,6 +129,16 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
             self.line.set_data(self.reader.t - time(), np.asarray(self.reader.d))
         return self.line,
 
+    def OnMenu_wxID_OPEN(self, evt):
+        port = self.reader.port
+        self.reader.cancel()
+        dlg = DlgPortSelector(self)
+        if dlg.ShowModal() == wx.ID_OK:
+            port = dlg.port
+            wx.Config.Get().Write("port", port)
+        self.reader = ReaderThread(port)
+        self.reader.start()
+
     def OnMenu_wxID_EXIT(self, evt):
         self.Close()
 
@@ -100,6 +150,8 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
 class App(wx.App):
     def OnInit(self):
         """Create the main window and insert the custom frame."""
+        wx.Config.Set(wx.Config("RDGUI"))
+
         frame = CanvasFrame()
         self.SetTopWindow(frame)
         frame.Show(True)

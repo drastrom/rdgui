@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<resource class="wxStatusBar">
+<resource class="wxButton">
   <object class="wxFrame" name="CanvasFrame">
     <object class="wxMenuBar">
       <object class="wxMenu" name="wxID_FILE">
+        <object class="wxMenuItem" name="wxID_OPEN">
+          <bitmap stock_id="wxART_FILE_OPEN"/>
+          <XRCED>
+            <events>EVT_MENU</events>
+          </XRCED>
+        </object>
+        <object class="separator"/>
         <object class="wxMenuItem" name="wxID_EXIT">
           <label>E&amp;xit</label>
           <bitmap stock_id="wxART_QUIT"/>
@@ -30,5 +37,42 @@
     <XRCED>
       <events>EVT_CLOSE</events>
     </XRCED>
+  </object>
+  <object class="wxDialog" name="dlgPortSelector">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxListCtrl" name="ID_COMPORT_LIST">
+          <style>wxLC_REPORT|wxLC_SINGLE_SEL</style>
+          <XRCED>
+            <events>EVT_LIST_ITEM_SELECTED|EVT_LIST_ITEM_DESELECTED|EVT_LIST_ITEM_ACTIVATED</events>
+            <assign_var>1</assign_var>
+          </XRCED>
+        </object>
+        <flag>wxALL|wxEXPAND</flag>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStdDialogButtonSizer">
+          <object class="button">
+            <object class="wxButton" name="wxID_OK">
+              <default>1</default>
+              <XRCED>
+                <events>EVT_BUTTON</events>
+                <assign_var>1</assign_var>
+              </XRCED>
+            </object>
+          </object>
+          <object class="button">
+            <object class="wxButton" name="wxID_CANCEL">
+              <XRCED>
+                <events>EVT_BUTTON</events>
+              </XRCED>
+            </object>
+          </object>
+        </object>
+        <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND</flag>
+      </object>
+    </object>
+    <title>Select Port</title>
   </object>
 </resource>
