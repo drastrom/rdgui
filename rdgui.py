@@ -17,9 +17,11 @@ submodpaths.add_to_path()
 from numpy_ringbuffer import RingBuffer
 import rd6006
 
-MOCK_DATA=True
+MOCK_DATA=False
 POLLING_INTERVAL=0.25
 GRAPH_SECONDS=60.0
+VOLTAGE_RANGE=5.0
+AMPERAGE_RANGE=1.0
 
 def emitter(p=0.1):
     """Return a random value in [0, 1) with probability p, else 0."""
@@ -43,7 +45,8 @@ class ReaderThread(threading.Thread):
         self.datalock = threading.Lock()
         self.shutdowncond = threading.Condition(self.datalock)
         self.t = RingBuffer(int(graph_seconds/self.polling_interval), float)
-        self.d = RingBuffer(int(graph_seconds/self.polling_interval), float)
+        self.v = RingBuffer(int(graph_seconds/self.polling_interval), float)
+        self.a = RingBuffer(int(graph_seconds/self.polling_interval), float)
 
     def cancel(self):
         with self.datalock:
@@ -52,22 +55,26 @@ class ReaderThread(threading.Thread):
 
     def run(self):
         if self.mock:
-            gen = emitter()
+            vgen = emitter()
+            agen = emitter()
         else:
             rd = rd6006.RD6006(self.port)
         while self.running:
-            a = time()
-            if self.mock:
-                v = next(gen)
-            else:
-                v = rd.measvoltage
             t = time()
-            #print (t - a)
+            if self.mock:
+                v = next(vgen)
+                a = next(agen)
+            else:
+                reg = rd._read_registers(10, 2)
+                v = reg[0] / rd.voltres
+                a = reg[1] / rd.ampres
+            print (time() - t, v, a)
             with self.datalock:
                 self.t.append(t)
-                self.d.append(v)
+                self.v.append(v)
+                self.a.append(a)
                 if self.running:
-                    self.shutdowncond.wait(max((a + self.polling_interval) - time(), 0))
+                    self.shutdowncond.wait(max((t + self.polling_interval) - time(), 0))
 
 class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
     def __init__(self, parent):
@@ -122,14 +129,21 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         self.reader = ReaderThread(port)
 
         self.figure = Figure()
-        axes = self.figure.add_subplot(111)
-        self.line = Line2D(self.reader.t, self.reader.d)
-        axes.add_line(self.line)
-        axes.set_ylim(-.1, 5.1)
-        axes.set_xlim(-config.ReadFloat("graph_seconds", GRAPH_SECONDS), 0)
 
-        axes.set_xlabel('t')
-        axes.set_ylabel('V')
+        self.vaxis = self.figure.add_subplot(111)
+        self.vline = Line2D(self.reader.t, self.reader.v)
+        self.vaxis.add_line(self.vline)
+        self.vaxis.set_ylim(0, config.ReadFloat("voltage_range", VOLTAGE_RANGE))
+        self.vaxis.set_xlim(-config.ReadFloat("graph_seconds", GRAPH_SECONDS), 0)
+        self.vaxis.set_xlabel('t')
+        self.vaxis.set_ylabel('V')
+
+        self.aaxis = self.vaxis.twinx()
+        self.aline = Line2D(self.reader.t, self.reader.a, color='#80000080')
+        self.aaxis.add_line(self.aline)
+        self.aaxis.set_ylim(0, config.ReadFloat("amperage_range", AMPERAGE_RANGE))
+        self.aaxis.set_ylabel('A')
+
         self.figure_canvas = FigureCanvas(self, wx.ID_ANY, self.figure)
         rdgui_xrc.get_resources().AttachUnknownControl("ID_FIGURE", self.figure_canvas, self)
 
@@ -137,6 +151,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         self.figure_canvas.mpl_connect(
             'motion_notify_event', self.UpdateStatusBar)
 
+        self.figure.tight_layout()
         self.Fit()
         self.MinSize = self.Size
         self.reader.start()
@@ -145,15 +160,23 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
 
     def UpdateStatusBar(self, event):
         if event.inaxes:
+            if event.inaxes == self.vaxis:
+                v = event.ydata
+                a = self.aaxis.transData.inverted().transform((event.x, event.y))[1]
+            else:
+                v = self.vaxis.transData.inverted().transform((event.x, event.y))[1]
+                a = event.ydata
             self.SetStatusText(
-                "t={}  V={}".format(event.xdata, event.ydata))
+                "t={}  V={}  A={}".format(event.xdata, v, a))
         else:
             self.SetStatusText("")
 
     def update(self, d):
         with self.reader.datalock:
-            self.line.set_data(self.reader.t - time(), np.asarray(self.reader.d))
-        return self.line,
+            t = time()
+            self.vline.set_data(self.reader.t - t, np.asarray(self.reader.v))
+            self.aline.set_data(self.reader.t - t, np.asarray(self.reader.a))
+        return self.vline, self.aline
 
     def OnMenu_wxID_OPEN(self, evt):
         port = self.reader.port
@@ -176,8 +199,9 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
 class App(wx.App):
     def OnInit(self):
         """Create the main window and insert the custom frame."""
-        wx.Config.Set(wx.Config("RDGUI"))
-
+        self.AppName = "RDGUI"
+        self.VendorName = "Drastrom"
+        self.VendorDisplayName = "Drästrøm"
         frame = CanvasFrame()
         self.SetTopWindow(frame)
         frame.Show(True)
