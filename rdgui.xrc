@@ -42,7 +42,7 @@
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>
       <object class="sizeritem">
-        <object class="wxListCtrl" name="ID_COMPORT_LIST">
+        <object class="wxListCtrl" name="ctlComportList">
           <style>wxLC_REPORT|wxLC_SINGLE_SEL</style>
           <XRCED>
             <events>EVT_LIST_ITEM_SELECTED|EVT_LIST_ITEM_DESELECTED|EVT_LIST_ITEM_ACTIVATED</events>

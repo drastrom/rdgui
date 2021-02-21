@@ -72,15 +72,15 @@ class ReaderThread(threading.Thread):
 class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
     def __init__(self, parent):
         super(DlgPortSelector, self).__init__(parent)
-        self.ID_COMPORT_LIST = self.ID_COMPORT_LIST # type: wx.ListCtrl
-        self.ID_COMPORT_LIST.AppendColumn("port")
-        self.ID_COMPORT_LIST.AppendColumn("desc", width=150)
-        self.ID_COMPORT_LIST.AppendColumn("hwid", width=200)
+        self.ctlComportList = self.ctlComportList # type: wx.ListCtrl
+        self.ctlComportList.AppendColumn("port")
+        self.ctlComportList.AppendColumn("desc", width=150)
+        self.ctlComportList.AppendColumn("hwid", width=200)
         if wx.Config.Get().ReadBool("mock_data", MOCK_DATA):
-            self.ID_COMPORT_LIST.Append(("port", "desc", "hwid"))
+            self.ctlComportList.Append(("port", "desc", "hwid"))
         import serial.tools.list_ports
         for port, desc, hwid in serial.tools.list_ports.comports():
-            self.ID_COMPORT_LIST.Append((port, desc, hwid))
+            self.ctlComportList.Append((port, desc, hwid))
         self.wxID_OK.Enable(False)
 
     def OnButton_wxID_CANCEL(self, evt):
@@ -89,20 +89,20 @@ class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
 
     def OnButton_wxID_OK(self, evt):
         # type: (wx.CommandEvent) -> None
-        sel = self.ID_COMPORT_LIST.GetFirstSelected()
+        sel = self.ctlComportList.GetFirstSelected()
         if (sel != -1):
-            self.port = self.ID_COMPORT_LIST.GetItemText(sel) # type: str
+            self.port = self.ctlComportList.GetItemText(sel) # type: str
             self.EndModal(evt.Id)
 
-    def OnList_item_deselected_ID_COMPORT_LIST(self, evt):
+    def OnList_item_deselected_ctlComportList(self, evt):
         # type: (wx.ListEvent) -> None
         self.wxID_OK.Enable(False)
 
-    def OnList_item_selected_ID_COMPORT_LIST(self, evt):
+    def OnList_item_selected_ctlComportList(self, evt):
         # type: (wx.ListEvent) -> None
         self.wxID_OK.Enable(True)
 
-    def OnList_item_activated_ID_COMPORT_LIST(self, evt):
+    def OnList_item_activated_ctlComportList(self, evt):
         # type: (wx.ListEvent) -> None
         self.port = evt.Text # type: str
         self.EndModal(wx.ID_OK)
