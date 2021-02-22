@@ -28,12 +28,90 @@
         <option>1</option>
         <flag>wxTOP|wxLEFT|wxGROW</flag>
       </object>
+      <object class="sizeritem">
+        <object class="wxStaticLine">
+          <style>wxLI_HORIZONTAL</style>
+        </object>
+        <flag>wxTOP|wxBOTTOM|wxEXPAND</flag>
+        <border>7</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Voltage</label>
+            </object>
+            <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+            <border>4</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxSpinCtrlDouble" name="ctlVoltage">
+              <min>0</min>
+              <max>66</max>
+              <inc>0.01</inc>
+              <style>wxSP_ARROW_KEYS|wxALIGN_RIGHT</style>
+              <XRCED>
+                <assign_var>1</assign_var>
+              </XRCED>
+            </object>
+            <flag>wxRIGHT</flag>
+            <border>7</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticText">
+              <label>Amperage</label>
+            </object>
+            <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+            <border>4</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxSpinCtrlDouble" name="ctlAmperage">
+              <min>0</min>
+              <max>6.6</max>
+              <inc>0.001</inc>
+              <style>wxSP_ARROW_KEYS|wxALIGN_RIGHT</style>
+              <XRCED>
+                <assign_var>1</assign_var>
+              </XRCED>
+            </object>
+          </object>
+          <object class="spacer">
+            <option>1</option>
+            <flag>wxEXPAND</flag>
+          </object>
+          <object class="sizeritem">
+            <object class="wxButton" name="btnUpdate">
+              <label>Update</label>
+              <default>1</default>
+              <XRCED>
+                <events>EVT_BUTTON</events>
+              </XRCED>
+            </object>
+            <flag>wxRIGHT</flag>
+            <border>7</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxToggleButton" name="btnEnable">
+              <label>Enable</label>
+              <XRCED>
+                <events>EVT_TOGGLEBUTTON</events>
+                <assign_var>1</assign_var>
+              </XRCED>
+            </object>
+          </object>
+          <orient>wxHORIZONTAL</orient>
+        </object>
+        <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND</flag>
+        <border>7</border>
+      </object>
     </object>
     <object class="wxStatusBar">
+      <fields>2</fields>
       <style>wxST_SIZEGRIP</style>
     </object>
     <size>550,350</size>
     <title>CanvasFrame</title>
+    <bg>#FFFFFF</bg>
     <XRCED>
       <events>EVT_CLOSE</events>
     </XRCED>
