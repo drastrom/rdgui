@@ -1,0 +1,37 @@
+<?xml version="1.0" ?>
+<resource class="Component">
+  <component class="Component" name="FloatSpinCtrl">
+    <groups>
+      <item>control</item>
+    </groups>
+    <attributes>
+      <item>pos</item>
+      <item>size</item>
+      <item>value</item>
+      <item>min</item>
+      <item>max</item>
+      <item>inc</item>
+      <item>digits</item>
+    </attributes>
+    <params>
+      <item>min:ParamText</item>
+      <item>max:ParamText</item>
+      <item>digits:ParamInt</item>
+    </params>
+    <has-name>1</has-name>
+    <styles>
+      <item>wxFS_LEFT</item>
+      <item>wxFS_CENTRE</item>
+      <item>wxFS_RIGHT</item>
+      <item>wxFS_READONLY</item>
+    </styles>
+    <events>
+      <item>EVT_FLOATSPIN</item>
+    </events>
+    <module>xh_floatspin</module>
+    <handler>FloatSpinCtrlXmlHandler</handler>
+    <menu>gizmo</menu>
+    <label>Float Spin Control</label>
+    <help>Spin Control for floating-point numbers</help>
+  </component>
+</resource>

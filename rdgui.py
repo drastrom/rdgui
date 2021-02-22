@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from time import time
+import math
 import threading
+from time import time
 import traceback
 
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
@@ -11,13 +12,18 @@ import matplotlib.animation as animation
 import minimalmodbus
 import numpy as np
 import wx
+import wx.lib.agw.floatspin
 
 import rdgui_xrc
+import xh_floatspin
 import submodpaths
 submodpaths.add_to_path()
 
 from numpy_ringbuffer import RingBuffer
 import rd6006
+
+rdgui_xrc.get_resources().AddHandler(xh_floatspin.FloatSpinCtrlXmlHandler())
+
 
 MOCK_DATA=False
 POLLING_INTERVAL=0.25
@@ -156,8 +162,8 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         super(CanvasFrame, self).__init__(parent)
 
         # no-op self-assignment for typing
-        self.ctlVoltage = self.ctlVoltage   # type: wx.SpinCtrlDouble
-        self.ctlAmperage = self.ctlAmperage # type: wx.SpinCtrlDouble
+        self.ctlVoltage = self.ctlVoltage   # type: wx.lib.agw.floatspin.FloatSpin
+        self.ctlAmperage = self.ctlAmperage # type: wx.lib.agw.floatspin.FloatSpin
         self.btnEnable = self.btnEnable     # type: wx.ToggleButton
 
         config = wx.Config.Get() # type: wx.ConfigBase
@@ -172,12 +178,18 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
             rdwrap.open(port)
             voltage, current = rdwrap.rd.voltagecurrent
             # assume model number is (max_voltage * 100) + max_amperage
-            self.ctlVoltage.SetIncrement(1.0/rdwrap.rd.voltres)
-            self.ctlAmperage.SetMax(int(rdwrap.rd.type / 100) + 0.6)
+            inc = 1.0/rdwrap.rd.voltres
+            self.ctlVoltage.SetIncrement(inc)
+            self.ctlVoltage.SetDigits(-math.floor(math.log10(inc)))
+            self.ctlVoltage.SetRange(0, int(rdwrap.rd.type / 100) * 1.1)
             self.ctlVoltage.SetValue(voltage)
-            self.ctlAmperage.SetIncrement(1.0/rdwrap.rd.ampres)
-            self.ctlAmperage.SetMax((rdwrap.rd.type % 100) + 0.6)
+
+            inc = 1.0/rdwrap.rd.ampres
+            self.ctlAmperage.SetIncrement(inc)
+            self.ctlAmperage.SetDigits(-math.floor(math.log10(inc)))
+            self.ctlAmperage.SetRange(0, (rdwrap.rd.type % 100) * 1.1)
             self.ctlAmperage.SetValue(current)
+
             self.btnEnable.SetValue(rdwrap.rd.enable)
         except:
             traceback.print_exc()
