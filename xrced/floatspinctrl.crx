@@ -12,11 +12,14 @@
       <item>max</item>
       <item>inc</item>
       <item>digits</item>
+      <item>format</item>
+      <item>snap_to_ticks</item>
     </attributes>
     <params>
       <item>min:ParamText</item>
       <item>max:ParamText</item>
       <item>digits:ParamInt</item>
+      <item>snap_to_ticks:ParamBool</item>
     </params>
     <has-name>1</has-name>
     <styles>
