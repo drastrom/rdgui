@@ -250,8 +250,14 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         return self.vline, self.aline
 
     def OnButton_btnUpdate(self, evt):
+        voltage = self.ctlVoltage.GetValue()
+        current = self.ctlAmperage.GetValue()
         with rdwrap.lock:
-            rdwrap.rd.voltagecurrent = (self.ctlVoltage.GetValue(), self.ctlAmperage.GetValue())
+            rdwrap.rd.voltagecurrent = (voltage, current)
+            # read back in case the setting didn't take
+            voltage, current = rdwrap.rd.voltagecurrent
+        self.ctlVoltage.SetValue(voltage)
+        self.ctlAmperage.SetValue(current)
 
     def OnTogglebutton_btnEnable(self, evt):
         # type: (wx.CommandEvent) -> None
