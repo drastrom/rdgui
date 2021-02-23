@@ -43,6 +43,9 @@ def emitter(p=0.1):
 class RD6006(rd6006.RD6006):
     def __init__(self, *args, **kwargs):
         super(RD6006, self).__init__(*args, **kwargs)
+        # It looks like rd6006 tried to change minimalmodbus timeout to 0.5s,
+        # but at least the version I have is still using 0.05s.  Change it
+        self.instrument.serial.timeout = 0.5
 
     def _write_registers(self, register, values):
         try:
