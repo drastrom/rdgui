@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+# vim: set fileencoding=utf-8 :
+
+from __future__ import print_function
 
 import math
 import threading
@@ -85,7 +88,8 @@ rdwrap = RDWrapper()
 class ReaderThread(threading.Thread):
     def __init__(self):
         # type: (str) -> None
-        super(ReaderThread, self).__init__(daemon=True)
+        super(ReaderThread, self).__init__()
+        self.daemon = True
         config = wx.Config.Get() # type: wx.ConfigBase
         self.polling_interval = config.ReadFloat("polling_interval", POLLING_INTERVAL) # type: float
         self.mock = config.ReadBool("mock_data", MOCK_DATA) # type: bool
@@ -126,14 +130,18 @@ class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
     def __init__(self, parent):
         super(DlgPortSelector, self).__init__(parent)
         self.ctlComportList = self.ctlComportList # type: wx.ListCtrl
-        self.ctlComportList.AppendColumn("port")
-        self.ctlComportList.AppendColumn("desc", width=150)
-        self.ctlComportList.AppendColumn("hwid", width=200)
+        self.ctlComportList.InsertColumn(self.ctlComportList.GetColumnCount(), "port")
+        self.ctlComportList.InsertColumn(self.ctlComportList.GetColumnCount(), "desc", width=150)
+        self.ctlComportList.InsertColumn(self.ctlComportList.GetColumnCount(), "hwid", width=200)
         if wx.Config.Get().ReadBool("mock_data", MOCK_DATA):
-            self.ctlComportList.Append(("port", "desc", "hwid"))
+            pos = self.ctlComportList.InsertStringItem(self.ctlComportList.GetItemCount(), "port")
+            self.ctlComportList.SetStringItem(pos, 1, "desc")
+            self.ctlComportList.SetStringItem(pos, 2, "hwid")
         import serial.tools.list_ports
         for port, desc, hwid in serial.tools.list_ports.comports():
-            self.ctlComportList.Append((port, desc, hwid))
+            pos = self.ctlComportList.InsertStringItem(self.ctlComportList.GetItemCount(), port)
+            self.ctlComportList.SetStringItem(pos, 1, desc)
+            self.ctlComportList.SetStringItem(pos, 2, hwid)
         self.wxID_OK.Enable(False)
 
     def OnButton_wxID_CANCEL(self, evt):
@@ -183,13 +191,13 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
             # assume model number is (max_voltage * 100) + max_amperage
             inc = 1.0/rdwrap.rd.voltres
             self.ctlVoltage.SetIncrement(inc)
-            self.ctlVoltage.SetDigits(-math.floor(math.log10(inc)))
+            self.ctlVoltage.SetDigits(int(-math.floor(math.log10(inc))))
             self.ctlVoltage.SetRange(0, int(rdwrap.rd.type / 100) * 1.1)
             self.ctlVoltage.SetValue(voltage)
 
             inc = 1.0/rdwrap.rd.ampres
             self.ctlAmperage.SetIncrement(inc)
-            self.ctlAmperage.SetDigits(-math.floor(math.log10(inc)))
+            self.ctlAmperage.SetDigits(int(-math.floor(math.log10(inc))))
             self.ctlAmperage.SetRange(0, (rdwrap.rd.type % 100) * 1.1)
             self.ctlAmperage.SetValue(current)
 
@@ -243,11 +251,11 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
 
     def update(self, d):
         with self.reader.datalock:
-            t = time()
+            t = np.asarray(self.reader.t) - time()
             v = np.asarray(self.reader.v)
             a = np.asarray(self.reader.a)
-            self.vline.set_data(self.reader.t - t, v)
-            self.aline.set_data(self.reader.t - t, a)
+            self.vline.set_data(t, v)
+            self.aline.set_data(t, a)
             if self and len(v) > 0 and len(a) > 0:
                 self.SetStatusText("Last V={:.3f}  A={:.3f}".format(v[-1], a[-1]), 1)
         return self.vline, self.aline

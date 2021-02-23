@@ -16,6 +16,12 @@ class FloatSpinCtrlXmlHandler(xrc.XmlResourceHandler):
     def CanHandle(self,node):
         return self.IsOfClass(node, 'FloatSpinCtrl')
 
+    def GetFloat(self, name, default=0):
+        try:
+            return super(FloatSpinCtrlXmlHandler, self).GetFloat(name, default)
+        except AttributeError:
+            return float(self.GetParamValue(name)) if self.HasParam(name) else default
+
     # Process XML parameters and create the object
     def DoCreateResource(self):
         assert self.GetInstance() is None
