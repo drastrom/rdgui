@@ -47,7 +47,7 @@
             </object>
             <object class="sizeritem">
               <object class="FloatSpinCtrl" name="ctlVoltage">
-                <size>60,-1</size>
+                <size platform="win">60,-1</size>
                 <min>0</min>
                 <max>66</max>
                 <inc>0.01</inc>
@@ -68,7 +68,7 @@
             </object>
             <object class="sizeritem">
               <object class="FloatSpinCtrl" name="ctlAmperage">
-                <size>60,-1</size>
+                <size platform="win">60,-1</size>
                 <min>0</min>
                 <max>6.6</max>
                 <inc>0.001</inc>
@@ -113,7 +113,6 @@
       <fields>2</fields>
       <style>wxST_SIZEGRIP</style>
     </object>
-    <size>550,350</size>
     <title>CanvasFrame</title>
     <bg>#FFFFFF</bg>
     <XRCED>
