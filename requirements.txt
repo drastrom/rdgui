@@ -1,0 +1,7 @@
+pyserial
+minimalmodbus
+numpy
+numpy_ringbuffer
+# the wx version bundled with 4.1.1 has issues with stock bitmaps with alpha.
+# https://github.com/wxWidgets/Phoenix/issues/1859
+wxPython != 4.1.1

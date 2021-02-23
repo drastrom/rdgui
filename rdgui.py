@@ -14,6 +14,7 @@ from matplotlib.lines import Line2D
 import matplotlib.animation as animation
 import minimalmodbus
 import numpy as np
+from numpy_ringbuffer import RingBuffer
 import wx
 import wx.lib.agw.floatspin
 
@@ -22,7 +23,6 @@ import xh_floatspin
 import submodpaths
 submodpaths.add_to_path()
 
-from numpy_ringbuffer import RingBuffer
 import rd6006
 
 rdgui_xrc.get_resources().AddHandler(xh_floatspin.FloatSpinCtrlXmlHandler())
@@ -209,7 +209,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         self.figure = Figure()
 
         self.vaxis = self.figure.add_subplot(111)
-        self.vline = Line2D(self.reader.t, self.reader.v)
+        self.vline = Line2D([], [])
         self.vaxis.add_line(self.vline)
         self.vaxis.set_ylim(0, config.ReadFloat("voltage_range", VOLTAGE_RANGE))
         self.vaxis.set_xlim(-config.ReadFloat("graph_seconds", GRAPH_SECONDS), 0)
@@ -217,7 +217,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         self.vaxis.set_ylabel('V')
 
         self.aaxis = self.vaxis.twinx()
-        self.aline = Line2D(self.reader.t, self.reader.a, color='#80000080')
+        self.aline = Line2D([], [], color='#80000080')
         self.aaxis.add_line(self.aline)
         self.aaxis.set_ylim(0, config.ReadFloat("amperage_range", AMPERAGE_RANGE))
         self.aaxis.set_ylabel('A')
