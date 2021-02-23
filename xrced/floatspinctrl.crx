@@ -29,7 +29,14 @@
       <item>wxFS_READONLY</item>
     </styles>
     <events>
+      <!-- This doesn't work because pywxrc always puts 'wx.' in front of
+           the name given, and this isn't in the wx module -->
       <item>EVT_FLOATSPIN</item>
+      <!-- FloatSpin also fires this event, and even includes the string
+           representation in addition to an integer representation
+           (for some unknown reason, EVT_FLOATSPIN doesn't include the float
+           representation!) -->
+      <item>EVT_SPINCTRL</item>
     </events>
     <module>xh_floatspin</module>
     <handler>FloatSpinCtrlXmlHandler</handler>
