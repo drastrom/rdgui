@@ -20,6 +20,15 @@
         </object>
         <label>&amp;File</label>
       </object>
+      <object class="wxMenu" name="ID_TOOLS">
+        <label>&amp;Tools</label>
+        <object class="wxMenuItem" name="ID_FWUPDATE">
+          <label>U&amp;pdate Firmware...</label>
+          <XRCED>
+            <events>EVT_MENU</events>
+          </XRCED>
+        </object>
+      </object>
     </object>
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>

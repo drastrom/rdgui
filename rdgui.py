@@ -3,10 +3,15 @@
 
 from __future__ import print_function
 
+import json
 import math
 import threading
 from time import time
 import traceback
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib import urlopen
 
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -55,6 +60,10 @@ class RD6006(rd6006.RD6006):
             return self.instrument.write_registers(register, values)
         except minimalmodbus.NoResponseError:
             return self._write_registers(register, values)
+
+    @property
+    def model(self):
+        return self._read_register(0)
 
     @property
     def measvoltagecurrent(self):
@@ -281,6 +290,30 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
                 port = dlg.port
                 rdwrap.open(port)
                 wx.Config.Get().Write("port", port)
+
+    def OnMenu_ID_FWUPDATE(self, evt):
+        if wx.Config.Get().ReadBool("mock_data", MOCK_DATA):
+            model = 60062
+            fwver = 1.23
+        else:
+            with rdwrap.lock:
+                model = rdwrap.rd.model
+                fwver = rdwrap.rd.fw
+
+        url = "http://www.ruidengkeji.com/rdupdate/firmware/RD{0}/RD{0}.json".format(model)
+        fp = urlopen(url)
+        try:
+            updata = json.load(fp, strict=False)
+        finally:
+            fp.close()
+
+        import pprint
+        wx.MessageBox("Server firmware %.2f, device firmware %.2f\n%s" % (float(updata["Version"]), fwver, pprint.pformat(updata)))
+        # test rebooting into bootloader
+        #with rdwrap.lock:
+        #    # this throws due to an invalid response according to modbus
+        #    # protocol: '\xfc'
+        #    rdwrap.rd.instrument.write_register(0x100, 0x1601, functioncode=6)
 
     def OnMenu_wxID_EXIT(self, evt):
         self.Close()
