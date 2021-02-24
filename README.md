@@ -6,6 +6,7 @@ Potentially packaged pre-requisites include:
 * wxPython
 * numpy
 * pyserial
+* matplotlib
 
 If your OS has packages for these, I recommend installing them.  Then, either
 ```
