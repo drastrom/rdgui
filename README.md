@@ -33,3 +33,19 @@ $ pip install -r requirements.txt
 $ python build.py
 $ python rdgui.py
 ```
+
+## development
+This project uses an XRCed extension, so you need to set XRCEDPATH.
+```
+$ set XRCEDPATH=xrced
+$ set PYTHONPATH=.
+$ xrced rdgui.xrc
+```
+
+Note that XRCed doesn't come with wxPython anymore as of version 4, but a compatible version is at https://github.com/drastrom/XRCed on the `py3_phoenix` branch.
+```
+$ set XRCEDPATH=xrced
+$ set PYTHONPATH=.:../XRCed (or .;..\XRCed on Windows)
+$ python -m wx.tools.XRCed rdgui.xrc
+```
+
