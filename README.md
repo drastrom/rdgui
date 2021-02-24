@@ -1,0 +1,35 @@
+# rdgui
+Cross-platform wxPython GUI for RD60{06,12,18}
+
+## installation
+Potentially packaged pre-requisites include:
+* wxPython
+* numpy
+* pyserial
+
+If your OS has packages for these, I recommend installing them.  Then, either
+```
+$ virtualenv --system-site-packages venv
+```
+or
+```
+$ python -m venv --system-site-packages venv
+```
+
+Then
+```
+$ . venv/bin/activate
+```
+or
+```
+C:\> venv\Scripts\activate
+```
+
+Finally
+```
+$ git clone --recursive https://github.com/drastrom/rdgui.git
+$ cd rdgui
+$ pip install -r requirements.txt
+$ python build.py
+$ python rdgui.py
+```
