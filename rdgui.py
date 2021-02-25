@@ -5,9 +5,15 @@ from __future__ import print_function
 
 import json
 import math
+import struct
+import sys
 import threading
 from time import time
 import traceback
+try:
+    from typing import Callable
+except:
+    pass
 try:
     from urllib.request import urlopen
 except ImportError:
@@ -32,6 +38,7 @@ import rd6006
 
 rdgui_xrc.get_resources().AddHandler(xh_floatspin.FloatSpinCtrlXmlHandler())
 
+_ = wx.GetTranslation
 
 MOCK_DATA=False
 POLLING_INTERVAL=0.25
@@ -78,6 +85,73 @@ class RD6006(rd6006.RD6006):
     @voltagecurrent.setter
     def voltagecurrent(self, value):
         self._write_registers(8, [int(value[0] * self.voltres), int(value[1] * self.ampres)])
+
+    def reboot_into_bootloader(self):
+        py3 = sys.version_info[0] > 2
+        f = struct.pack(">BBHH", self.instrument.address, 6, 0x100, 0x1601)
+        # stupid minimalmodbus
+        if py3:
+            f = str(f, encoding='latin1')
+        f += minimalmodbus._calculate_crc_string(f)
+        if py3:
+            f = bytes(f, encoding='latin1')
+        if self.instrument.clear_buffers_before_each_transaction:
+            self.instrument.serial.reset_input_buffer()
+            self.instrument.serial.reset_output_buffer()
+        t = self.instrument.serial.timeout
+        try:
+            self.instrument.serial.timeout = 5.0
+            self.instrument.serial.write(f)
+            res = self.instrument.serial.read(1)
+            if res != b'\xfc':
+                raise RuntimeError("Unable to reboot into bootloader")
+        finally:
+            self.instrument.serial.timeout = t
+
+    @property
+    def is_bootloader(self):
+        if self.instrument.clear_buffers_before_each_transaction:
+            self.instrument.serial.reset_input_buffer()
+            self.instrument.serial.reset_output_buffer()
+        self.instrument.serial.write(b"queryd\r\n")
+        res = self.instrument.serial.read(4)
+        return res == b'boot'
+
+    @property
+    def bootloader_info(self):
+        if self.instrument.clear_buffers_before_each_transaction:
+            self.instrument.serial.reset_input_buffer()
+            self.instrument.serial.reset_output_buffer()
+        self.instrument.serial.write(b"getinf\r\n")
+        res = self.instrument.serial.read(13)
+        if len(res) != 13:
+            raise RuntimeError("Bad getinf response from bootloader: {!r}".format(res))
+        rtype, serial, model, bootver, fwver = struct.unpack("<3sIHHH", res)
+        if rtype != b'inf':
+            raise RuntimeError("Bad getinf response from bootloader: {!r}".format(res))
+        return {"serial": serial, "model": model, "bootver": bootver/100., "fwver": fwver/100.}
+
+    def bootloader_update_firmware(self, firmware, progress_callback = lambda pos: None):
+        # type: (bytes, Callable[[int], None]) -> None
+        if self.instrument.clear_buffers_before_each_transaction:
+            self.instrument.serial.reset_input_buffer()
+            self.instrument.serial.reset_output_buffer()
+        t = self.instrument.serial.timeout
+        try:
+            self.instrument.serial.timeout = 5.0
+            self.instrument.serial.write(b"upfirm\r\n")
+            res = self.instrument.serial.read(6)
+            if res != b'upredy':
+                raise RuntimeError("Unable to enter update firmware mode: {!r}".format(res))
+            for pos, block in ((pos, firmware[pos:pos+64]) for pos in range(0, len(firmware), 64)):
+                progress_callback(pos)
+                self.instrument.serial.write(block)
+                res = self.instrument.serial.read(2)
+                if res != b'OK':
+                    raise RuntimeError("Flash failed: {!r}".format(res))
+        finally:
+            self.instrument.serial.timeout = t
+
 
 class RDWrapper(object):
     def __init__(self):
@@ -308,12 +382,18 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
             fp.close()
 
         import pprint
-        wx.MessageBox("Server firmware %.2f, device firmware %.2f\n%s" % (float(updata["Version"]), fwver, pprint.pformat(updata)))
-        # test rebooting into bootloader
-        #with rdwrap.lock:
-        #    # this throws due to an invalid response according to modbus
-        #    # protocol: '\xfc'
-        #    rdwrap.rd.instrument.write_register(0x100, 0x1601, functioncode=6)
+        if wx.MessageBox(_("Server firmware %.2f, device firmware %.2f\n%s") % (float(updata["Version"]), fwver, pprint.pformat(updata)), _("Firmware Update"), wx.YES_NO, self) == wx.YES:
+            with rdwrap.lock:
+                if not rdwrap.rd.is_bootloader:
+                    rdwrap.rd.reboot_into_bootloader()
+                    wx.Sleep(3)
+                    pprint.pprint(rdwrap.rd.bootloader_info)
+                    with urlopen(updata["DownloadUri"]) as fh:
+                        firmware = fh.read()
+                    def progress(pos):
+                        print("{}/{}: {:.2f}%".format(pos, len(firmware), pos*100/len(firmware)))
+                    rdwrap.rd.bootloader_update_firmware(firmware, progress)
+                    wx.Sleep(5)
 
     def OnMenu_wxID_EXIT(self, evt):
         self.Close()
