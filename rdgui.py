@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import contextlib
 import json
 import math
 import os
@@ -391,17 +392,14 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
                     fwver = rdwrap.rd.fw
 
         url = "http://www.ruidengkeji.com/rdupdate/firmware/RD{0}/RD{0}.json".format(model)
-        fp = urlopen(url)
-        try:
+        with contextlib.closing(urlopen(url)) as fp:
             updata = json.load(fp, strict=False)
-        finally:
-            fp.close()
 
         import pprint
         if wx.MessageBox(_("Server firmware %.2f, device firmware %.2f\n%s") % (float(updata["Version"]), fwver, pprint.pformat(updata)), _("Firmware Update"), wx.YES_NO, self) == wx.YES:
             def read_firmware():
                 # type: () -> bytes
-                with urlopen(updata["DownloadUri"]) as fh:
+                with contextlib.closing(urlopen(updata["DownloadUri"])) as fh:
                     return fh.read()
             self._update_firmware(int(updata["Size"]), read_firmware)
 
