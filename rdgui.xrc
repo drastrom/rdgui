@@ -4,7 +4,7 @@
     <object class="wxMenuBar">
       <object class="wxMenu" name="wxID_FILE">
         <object class="wxMenuItem" name="wxID_OPEN">
-          <bitmap stock_id="wxART_FILE_OPEN"/>
+          <bitmap>resources/serial-port-16.png</bitmap>
           <XRCED>
             <events>EVT_MENU</events>
           </XRCED>
@@ -24,6 +24,7 @@
         <label>&amp;Tools</label>
         <object class="wxMenuItem" name="ID_FWUPDATE">
           <label>Check for Firmware U&amp;pdate...</label>
+          <bitmap>resources/internet-16.png</bitmap>
           <XRCED>
             <events>EVT_MENU</events>
           </XRCED>
@@ -129,7 +130,7 @@
       <fields>2</fields>
       <style>wxST_SIZEGRIP</style>
     </object>
-    <title>CanvasFrame</title>
+    <title>RD GUI</title>
     <bg>#FFFFFF</bg>
     <XRCED>
       <events>EVT_CLOSE</events>
