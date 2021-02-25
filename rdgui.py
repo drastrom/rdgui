@@ -5,6 +5,7 @@ from __future__ import print_function
 
 import json
 import math
+import os
 import struct
 import sys
 import threading
@@ -57,10 +58,18 @@ def emitter(p=0.1):
 
 class RD6006(rd6006.RD6006):
     def __init__(self, *args, **kwargs):
+        self._constructing = True
         super(RD6006, self).__init__(*args, **kwargs)
+        self._constructing = False
         # It looks like rd6006 tried to change minimalmodbus timeout to 0.5s,
         # but at least the version I have is still using 0.05s.  Change it
         self.instrument.serial.timeout = 0.5
+
+    def _read_registers(self, start, length):
+        if self._constructing and start == 0 and length == 4 and self.is_bootloader:
+            info = self.bootloader_info
+            return (info["model"], (info["serial"] >> 16) & 0xFFFF, info["serial"] & 0xFFFF, int(info["fwver"]*100))
+        return super(RD6006, self)._read_registers(start, length)
 
     def _write_registers(self, register, values):
         try:
@@ -270,6 +279,8 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
 
         try:
             rdwrap.open(port)
+            if rdwrap.rd.is_bootloader:
+                self.OnMenu_ID_FWUPDATE(None)
             voltage, current = rdwrap.rd.voltagecurrent
             # assume model number is (max_voltage * 100) + max_amperage
             inc = 1.0/rdwrap.rd.voltres
@@ -371,8 +382,13 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
             fwver = 1.23
         else:
             with rdwrap.lock:
-                model = rdwrap.rd.model
-                fwver = rdwrap.rd.fw
+                if rdwrap.rd.is_bootloader:
+                    info = rdwrap.rd.bootloader_info
+                    model = info["model"]
+                    fwver = info["fwver"]
+                else:
+                    model = rdwrap.rd.model
+                    fwver = rdwrap.rd.fw
 
         url = "http://www.ruidengkeji.com/rdupdate/firmware/RD{0}/RD{0}.json".format(model)
         fp = urlopen(url)
@@ -383,17 +399,19 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
 
         import pprint
         if wx.MessageBox(_("Server firmware %.2f, device firmware %.2f\n%s") % (float(updata["Version"]), fwver, pprint.pformat(updata)), _("Firmware Update"), wx.YES_NO, self) == wx.YES:
-            with rdwrap.lock:
-                if not rdwrap.rd.is_bootloader:
-                    rdwrap.rd.reboot_into_bootloader()
-                    wx.Sleep(3)
-                    pprint.pprint(rdwrap.rd.bootloader_info)
-                    with urlopen(updata["DownloadUri"]) as fh:
-                        firmware = fh.read()
-                    def progress(pos):
-                        print("{}/{}: {:.2f}%".format(pos, len(firmware), pos*100/len(firmware)))
-                    rdwrap.rd.bootloader_update_firmware(firmware, progress)
-                    wx.Sleep(5)
+            def read_firmware():
+                # type: () -> bytes
+                with urlopen(updata["DownloadUri"]) as fh:
+                    return fh.read()
+            self._update_firmware(int(updata["Size"]), read_firmware)
+
+    def OnMenu_ID_FWFILE(self, evt):
+        filename = wx.FileSelector(_("Open Firmware File"), wildcard=_("Firmware File (*.bin)|*.bin"), flags=wx.FD_OPEN|wx.FD_FILE_MUST_EXIST, parent=self) # type: str
+        if filename.strip():
+            def read_firmware():
+                with open(filename, "rb") as fh:
+                    return fh.read()
+            self._update_firmware(int(os.stat(filename).st_size), read_firmware)
 
     def OnMenu_wxID_EXIT(self, evt):
         self.Close()
@@ -402,6 +420,22 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         self.reader.cancel()
         self.reader.join()
         evt.Skip()
+
+    def _update_firmware(self, firmware_size, read_firmware_func):
+        # type: (int, Callable[[], bytes]) -> None
+        with wx.ProgressDialog(_("Updating Firmware"), _("Getting firmware..."), maximum=firmware_size, parent=self, style=wx.PD_APP_MODAL) as pd:
+            firmware = read_firmware_func()
+            def progress(pos):
+                pd.Update(pos, _("Updating {}/{}: {:.2f}%").format(pos, len(firmware), pos*100/len(firmware)))
+            pd.Update(1, _("Restarting into bootloader..."))
+            with rdwrap.lock:
+                if not rdwrap.rd.is_bootloader:
+                    rdwrap.rd.reboot_into_bootloader()
+                    wx.Sleep(3)
+                rdwrap.rd.bootloader_update_firmware(firmware, progress)
+                wx.Sleep(5)
+            pd.Close()
+
 
 class App(wx.App):
     def OnInit(self):

@@ -23,7 +23,14 @@
       <object class="wxMenu" name="ID_TOOLS">
         <label>&amp;Tools</label>
         <object class="wxMenuItem" name="ID_FWUPDATE">
-          <label>U&amp;pdate Firmware...</label>
+          <label>Check for Firmware U&amp;pdate...</label>
+          <XRCED>
+            <events>EVT_MENU</events>
+          </XRCED>
+        </object>
+        <object class="wxMenuItem" name="ID_FWFILE">
+          <label>Update from &amp;File...</label>
+          <bitmap stock_id="wxART_FILE_OPEN"/>
           <XRCED>
             <events>EVT_MENU</events>
           </XRCED>
