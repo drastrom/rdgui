@@ -424,7 +424,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         with wx.ProgressDialog(_("Updating Firmware"), _("Getting firmware..."), maximum=firmware_size, parent=self, style=wx.PD_APP_MODAL) as pd:
             firmware = read_firmware_func()
             def progress(pos):
-                pd.Update(pos, _("Updating {}/{}: {:.2f}%").format(pos, len(firmware), pos*100/len(firmware)))
+                pd.Update(pos, _("Updating {}/{}: {:.2f}%").format(pos, len(firmware), pos*100./len(firmware)))
             pd.Update(1, _("Restarting into bootloader..."))
             with rdwrap.lock:
                 if not rdwrap.rd.is_bootloader:
