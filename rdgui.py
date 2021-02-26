@@ -407,7 +407,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
                 if isinstance(w, wx.TextCtrl) and (w.WindowStyle & wx.TE_DONTWRAP) != 0:
                     new = wx.TextCtrl(mb, value=w.Value, style=(w.WindowStyle & ~(wx.TE_DONTWRAP|wx.HSCROLL)) | wx.TE_BESTWRAP)
                     new.SetMinSize(w.GetMinSize())
-                    print(mb.Sizer.Replace(w, new, True))
+                    mb.Sizer.Replace(w, new, True)
                     w.Destroy()
             mb.Layout()
             ans = mb.ShowModal()
