@@ -30,6 +30,7 @@ import numpy as np
 from numpy_ringbuffer import RingBuffer
 import wx
 import wx.lib.agw.floatspin
+import wx.lib.dialogs
 
 import rdgui_xrc
 import xh_floatspin
@@ -395,8 +396,22 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         with contextlib.closing(urlopen(url)) as fp:
             updata = json.load(fp, strict=False)
 
-        import pprint
-        if wx.MessageBox(_("Server firmware %.2f, device firmware %.2f\n%s") % (float(updata["Version"]), fwver, pprint.pformat(updata)), _("Firmware Update"), wx.YES_NO, self) == wx.YES:
+        with wx.lib.dialogs.MultiMessageDialog(self, _("Device firmware version {:.2f} -> Online version {:.2f}, released {}").format(
+            fwver, float(updata["Version"]), updata["Time"]), _("Update firmware?"),
+            _("{}\nHistory:\n\n{}").format(updata["UpdateContent"], updata["History"]),
+             wx.YES_NO|wx.ICON_QUESTION
+        ) as mb:
+            mb = mb # type: wx.lib.dialogs.MultiMessageDialog
+            # this is evil
+            for w in mb.Children:
+                if isinstance(w, wx.TextCtrl) and (w.WindowStyle & wx.TE_DONTWRAP) != 0:
+                    new = wx.TextCtrl(mb, value=w.Value, style=(w.WindowStyle & ~(wx.TE_DONTWRAP|wx.HSCROLL)) | wx.TE_BESTWRAP)
+                    new.SetMinSize(w.GetMinSize())
+                    print(mb.Sizer.Replace(w, new, True))
+                    w.Destroy()
+            mb.Layout()
+            ans = mb.ShowModal()
+        if ans == wx.YES:
             def read_firmware():
                 # type: () -> bytes
                 with contextlib.closing(urlopen(updata["DownloadUri"])) as fh:
