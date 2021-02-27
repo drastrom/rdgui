@@ -12,6 +12,7 @@ import sys
 import threading
 from time import time
 import traceback
+import types
 try:
     from typing import Callable
 except:
@@ -48,6 +49,25 @@ POLLING_INTERVAL=0.25
 GRAPH_SECONDS=60.0
 VOLTAGE_RANGE=5.0
 AMPERAGE_RANGE=1.0
+
+class AttributeSetterCtx(object):
+    def __init__(self, obj, attr, value):
+        # type: (object, str, object) -> None
+        super(AttributeSetterCtx, self).__init__()
+        self.obj = obj
+        self.attr = attr
+        self.value = value
+
+    def __enter__(self):
+        # type () -> object
+        self.old = getattr(self.obj, self.attr)
+        setattr(self.obj, self.attr, self.value)
+        return self.obj
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # type: (type, BaseException, types.TracebackType) -> bool
+        setattr(self.obj, self.attr, self.old)
+        return False
 
 def emitter(p=0.1):
     """Return a random value in [0, 1) with probability p, else 0."""
@@ -109,15 +129,11 @@ class RD6006(rd6006.RD6006):
         if self.instrument.clear_buffers_before_each_transaction:
             self.instrument.serial.reset_input_buffer()
             self.instrument.serial.reset_output_buffer()
-        t = self.instrument.serial.timeout
-        try:
-            self.instrument.serial.timeout = 5.0
+        with AttributeSetterCtx(self.instrument.serial, 'timeout', 5.0):
             self.instrument.serial.write(f)
             res = self.instrument.serial.read(1)
             if res != b'\xfc':
                 raise RuntimeError("Unable to reboot into bootloader")
-        finally:
-            self.instrument.serial.timeout = t
 
     @property
     def is_bootloader(self):
@@ -147,9 +163,7 @@ class RD6006(rd6006.RD6006):
         if self.instrument.clear_buffers_before_each_transaction:
             self.instrument.serial.reset_input_buffer()
             self.instrument.serial.reset_output_buffer()
-        t = self.instrument.serial.timeout
-        try:
-            self.instrument.serial.timeout = 5.0
+        with AttributeSetterCtx(self.instrument.serial, 'timeout', 5.0):
             self.instrument.serial.write(b"upfirm\r\n")
             res = self.instrument.serial.read(6)
             if res != b'upredy':
@@ -160,8 +174,6 @@ class RD6006(rd6006.RD6006):
                 res = self.instrument.serial.read(2)
                 if res != b'OK':
                     raise RuntimeError("Flash failed: {!r}".format(res))
-        finally:
-            self.instrument.serial.timeout = t
 
 
 class RDWrapper(object):
@@ -195,7 +207,7 @@ class ReaderThread(threading.Thread):
         self.v = RingBuffer(int(graph_seconds/self.polling_interval), float)
         self.a = RingBuffer(int(graph_seconds/self.polling_interval), float)
 
-    def cancel(self):
+    def shutdown(self):
         with self.datalock:
             self.running = False
             self.shutdowncond.notify()
@@ -409,9 +421,12 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
                     new.SetMinSize(w.GetMinSize())
                     mb.Sizer.Replace(w, new, True)
                     w.Destroy()
+            def OnMbClose(evt):
+                mb.EndModal(wx.ID_CANCEL)
+            mb.Bind(wx.EVT_CLOSE, OnMbClose)
             mb.Layout()
             ans = mb.ShowModal()
-        if ans == wx.YES:
+        if ans == wx.ID_YES:
             def read_firmware():
                 # type: () -> bytes
                 with contextlib.closing(urlopen(updata["DownloadUri"])) as fh:
@@ -430,7 +445,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         self.Close()
 
     def OnClose(self, evt):
-        self.reader.cancel()
+        self.reader.shutdown()
         self.reader.join()
         evt.Skip()
 
