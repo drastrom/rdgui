@@ -4,7 +4,6 @@ _mypath = os.path.dirname(os.path.abspath(__file__))
 
 _submodules = (
     'rd6006',
-    #'riden-flashtool',
 )
 
 def add_to_path():

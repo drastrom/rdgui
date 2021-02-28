@@ -2,6 +2,3 @@
 	path = rd6006
 	url = https://github.com/jeremyd2019/rd6006.git
 	ignore = untracked
-[submodule "riden-flashtool"]
-	path = riden-flashtool
-	url = https://github.com/tjko/riden-flashtool.git
