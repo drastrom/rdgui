@@ -25,6 +25,7 @@ except ImportError:
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
+from matplotlib.ticker import AutoMinorLocator
 import matplotlib.animation as animation
 import minimalmodbus
 import numpy as np
@@ -280,12 +281,15 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
         self.vaxis.set_xlim(-self.config.graph_seconds, 0)
         self.vaxis.set_xlabel('t')
         self.vaxis.set_ylabel('V')
+        self.vaxis.yaxis.set_minor_locator(AutoMinorLocator(4))
+        self.vaxis.grid(which='both', axis='y', linestyle='--')
 
         self.aaxis = self.vaxis.twinx()
         self.aline = Line2D([], [], color='#80000080')
         self.aaxis.add_line(self.aline)
         self.aaxis.set_ylim(0, self.config.amperage_range)
         self.aaxis.set_ylabel('A')
+        self.aaxis.yaxis.set_minor_locator(AutoMinorLocator(4))
 
         self.figure_canvas = FigureCanvas(self, wx.ID_ANY, self.figure)
         rdgui_xrc.get_resources().AttachUnknownControl("ID_FIGURE", self.figure_canvas, self)
