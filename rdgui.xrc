@@ -37,6 +37,16 @@
           </XRCED>
         </object>
       </object>
+      <object class="wxMenu" name="ID_VIEW">
+        <label>&amp;View</label>
+        <object class="wxMenuItem" name="ID_SETTINGS">
+          <label>S&amp;ettings...</label>
+          <bitmap stock_id="wxART_HELP_SETTINGS"/>
+          <XRCED>
+            <events>EVT_MENU</events>
+          </XRCED>
+        </object>
+      </object>
     </object>
     <object class="wxBoxSizer">
       <orient>wxVERTICAL</orient>
@@ -172,5 +182,134 @@
       </object>
     </object>
     <title>Select Port</title>
+  </object>
+  <object class="wxDialog" name="dlgSettings">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxPanel">
+          <object class="wxFlexGridSizer">
+            <object class="sizeritem">
+              <object class="wxStaticText">
+                <label>Graph Seconds:</label>
+              </object>
+              <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+            </object>
+            <object class="sizeritem">
+              <object class="FloatSpinCtrl" name="ctlGraphSeconds">
+                <size>80,-1</size>
+                <min>0</min>
+                <inc>0.1</inc>
+                <digits>1</digits>
+                <XRCED>
+                  <events>EVT_SPINCTRL</events>
+                  <assign_var>1</assign_var>
+                </XRCED>
+              </object>
+              <flag>wxEXPAND</flag>
+            </object>
+            <object class="sizeritem">
+              <object class="wxStaticText">
+                <label>Voltage Range:</label>
+              </object>
+              <flag>wxLEFT|wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+              <border>4</border>
+            </object>
+            <object class="sizeritem">
+              <object class="FloatSpinCtrl" name="ctlVoltageRange">
+                <size>80,-1</size>
+                <min>0</min>
+                <max>70</max>
+                <inc>0.01</inc>
+                <digits>2</digits>
+                <XRCED>
+                  <events>EVT_SPINCTRL</events>
+                  <assign_var>1</assign_var>
+                </XRCED>
+              </object>
+              <flag>wxEXPAND</flag>
+            </object>
+            <object class="sizeritem">
+              <object class="wxStaticText">
+                <label>Polling Interval:</label>
+              </object>
+              <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+            </object>
+            <object class="sizeritem">
+              <object class="FloatSpinCtrl" name="ctlPollingInterval">
+                <min>0.25</min>
+                <inc>0.01</inc>
+                <digits>2</digits>
+                <XRCED>
+                  <events>EVT_SPINCTRL</events>
+                  <assign_var>1</assign_var>
+                </XRCED>
+              </object>
+              <flag>wxEXPAND</flag>
+            </object>
+            <object class="sizeritem">
+              <object class="wxStaticText">
+                <label>Amperage Range:</label>
+              </object>
+              <flag>wxLEFT|wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+              <border>4</border>
+            </object>
+            <object class="sizeritem">
+              <object class="FloatSpinCtrl" name="ctlAmperageRange">
+                <min>0</min>
+                <max>20</max>
+                <inc>0.001</inc>
+                <digits>3</digits>
+                <XRCED>
+                  <events>EVT_SPINCTRL</events>
+                  <assign_var>1</assign_var>
+                </XRCED>
+              </object>
+              <flag>wxEXPAND</flag>
+            </object>
+            <cols>4</cols>
+            <rows>2</rows>
+            <vgap>7</vgap>
+            <hgap>3</hgap>
+            <growablecols>1,3</growablecols>
+          </object>
+        </object>
+        <flag>wxALL|wxEXPAND</flag>
+        <border>7</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStdDialogButtonSizer">
+          <object class="button">
+            <object class="wxButton" name="wxID_OK">
+              <default>1</default>
+              <XRCED>
+                <events>EVT_BUTTON</events>
+              </XRCED>
+            </object>
+          </object>
+          <object class="button">
+            <object class="wxButton" name="wxID_CANCEL">
+              <XRCED>
+                <events>EVT_BUTTON</events>
+              </XRCED>
+            </object>
+          </object>
+          <object class="button">
+            <object class="wxButton" name="wxID_APPLY">
+              <enabled>0</enabled>
+              <XRCED>
+                <events>EVT_BUTTON</events>
+                <assign_var>1</assign_var>
+              </XRCED>
+            </object>
+          </object>
+        </object>
+        <flag>wxEXPAND</flag>
+      </object>
+    </object>
+    <title>Settings</title>
+    <XRCED>
+      <events>EVT_CLOSE</events>
+    </XRCED>
   </object>
 </resource>

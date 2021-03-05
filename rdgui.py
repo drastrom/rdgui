@@ -33,8 +33,10 @@ import wx
 import wx.lib.agw.floatspin
 import wx.lib.dialogs
 
+import config
 import rdgui_xrc
 import xh_floatspin
+import dialogs
 import submodpaths
 submodpaths.add_to_path()
 
@@ -43,12 +45,6 @@ import rd6006
 rdgui_xrc.get_resources().AddHandler(xh_floatspin.FloatSpinCtrlXmlHandler())
 
 _ = wx.GetTranslation
-
-MOCK_DATA=False
-POLLING_INTERVAL=0.25
-GRAPH_SECONDS=60.0
-VOLTAGE_RANGE=5.0
-AMPERAGE_RANGE=1.0
 
 class AttributeSetterCtx(object):
     def __init__(self, obj, attr, value):
@@ -191,15 +187,16 @@ class RDWrapper(object):
 
 rdwrap = RDWrapper()
 
-class ReaderThread(threading.Thread):
+class ReaderThread(threading.Thread, config.ConfigChangeHandler):
     def __init__(self):
         # type: (str) -> None
         super(ReaderThread, self).__init__()
         self.daemon = True
-        config = wx.Config.Get() # type: wx.ConfigBase
-        self.polling_interval = config.ReadFloat("polling_interval", POLLING_INTERVAL) # type: float
-        self.mock = config.ReadBool("mock_data", MOCK_DATA) # type: bool
-        graph_seconds = config.ReadFloat("graph_seconds", GRAPH_SECONDS) # type: float
+        self.config = wx.GetApp().config # type: config.Config
+        self.config.Subscribe(self)
+        self.polling_interval = self.config.polling_interval # type: float
+        self.mock = self.config.mock_data # type: bool
+        graph_seconds = self.config.graph_seconds # type: float
         self.running = True
         self.datalock = threading.Lock()
         self.shutdowncond = threading.Condition(self.datalock)
@@ -211,6 +208,7 @@ class ReaderThread(threading.Thread):
         with self.datalock:
             self.running = False
             self.shutdowncond.notify()
+        self.config.Unsubscribe(self)
 
     def run(self):
         if self.mock:
@@ -232,49 +230,7 @@ class ReaderThread(threading.Thread):
                 if self.running:
                     self.shutdowncond.wait(max((t + self.polling_interval) - time(), 0))
 
-class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
-    def __init__(self, parent):
-        super(DlgPortSelector, self).__init__(parent)
-        self.ctlComportList = self.ctlComportList # type: wx.ListCtrl
-        self.ctlComportList.InsertColumn(self.ctlComportList.GetColumnCount(), "port")
-        self.ctlComportList.InsertColumn(self.ctlComportList.GetColumnCount(), "desc", width=150)
-        self.ctlComportList.InsertColumn(self.ctlComportList.GetColumnCount(), "hwid", width=200)
-        if wx.Config.Get().ReadBool("mock_data", MOCK_DATA):
-            pos = self.ctlComportList.InsertStringItem(self.ctlComportList.GetItemCount(), "port")
-            self.ctlComportList.SetStringItem(pos, 1, "desc")
-            self.ctlComportList.SetStringItem(pos, 2, "hwid")
-        import serial.tools.list_ports
-        for port, desc, hwid in serial.tools.list_ports.comports():
-            pos = self.ctlComportList.InsertStringItem(self.ctlComportList.GetItemCount(), port)
-            self.ctlComportList.SetStringItem(pos, 1, desc)
-            self.ctlComportList.SetStringItem(pos, 2, hwid)
-        self.wxID_OK.Enable(False)
-
-    def OnButton_wxID_CANCEL(self, evt):
-        # type: (wx.CommandEvent) -> None
-        self.EndModal(evt.Id)
-
-    def OnButton_wxID_OK(self, evt):
-        # type: (wx.CommandEvent) -> None
-        sel = self.ctlComportList.GetFirstSelected()
-        if (sel != -1):
-            self.port = self.ctlComportList.GetItemText(sel) # type: str
-            self.EndModal(evt.Id)
-
-    def OnList_item_deselected_ctlComportList(self, evt):
-        # type: (wx.ListEvent) -> None
-        self.wxID_OK.Enable(False)
-
-    def OnList_item_selected_ctlComportList(self, evt):
-        # type: (wx.ListEvent) -> None
-        self.wxID_OK.Enable(True)
-
-    def OnList_item_activated_ctlComportList(self, evt):
-        # type: (wx.ListEvent) -> None
-        self.port = evt.Text # type: str
-        self.EndModal(wx.ID_OK)
-
-class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
+class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
     def __init__(self, parent=None):
         super(CanvasFrame, self).__init__(parent)
 
@@ -283,14 +239,15 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         self.ctlAmperage = self.ctlAmperage # type: wx.lib.agw.floatspin.FloatSpin
         self.btnEnable = self.btnEnable     # type: wx.ToggleButton
 
-        config = wx.Config.Get() # type: wx.ConfigBase
-        port = config.Read("port") # type: str
+        self.config = wx.GetApp().config # type: config.Config
+        port = self.config.port # type: str
         if port == "":
-            with DlgPortSelector(self) as dlg:
+            with dialogs.DlgPortSelector(self) as dlg:
                 if dlg.ShowModal() == wx.ID_OK:
-                    port = dlg.port
-                    config.Write("port", port)
+                    config.port = dlg.port
+                    config.Save()
 
+        self.config.Subscribe(self)
         try:
             rdwrap.open(port)
             if rdwrap.rd.is_bootloader:
@@ -319,15 +276,15 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         self.vaxis = self.figure.add_subplot(111)
         self.vline = Line2D([], [])
         self.vaxis.add_line(self.vline)
-        self.vaxis.set_ylim(0, config.ReadFloat("voltage_range", VOLTAGE_RANGE))
-        self.vaxis.set_xlim(-config.ReadFloat("graph_seconds", GRAPH_SECONDS), 0)
+        self.vaxis.set_ylim(0, self.config.voltage_range)
+        self.vaxis.set_xlim(-self.config.graph_seconds, 0)
         self.vaxis.set_xlabel('t')
         self.vaxis.set_ylabel('V')
 
         self.aaxis = self.vaxis.twinx()
         self.aline = Line2D([], [], color='#80000080')
         self.aaxis.add_line(self.aline)
-        self.aaxis.set_ylim(0, config.ReadFloat("amperage_range", AMPERAGE_RANGE))
+        self.aaxis.set_ylim(0, self.config.amperage_range)
         self.aaxis.set_ylabel('A')
 
         self.figure_canvas = FigureCanvas(self, wx.ID_ANY, self.figure)
@@ -342,7 +299,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
         self.MinSize = self.Size
         self.reader.start()
         self.ani = animation.FuncAnimation(self.figure, self.update,
-                interval=int(config.ReadFloat("polling_interval", POLLING_INTERVAL)*1000), blit=True)
+                interval=int(self.config.polling_interval*1000), blit=True)
 
     def UpdateStatusBar(self, event):
         if event.inaxes:
@@ -384,14 +341,15 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
             rdwrap.rd.enable = evt.IsChecked()
 
     def OnMenu_wxID_OPEN(self, evt):
-        with DlgPortSelector(self) as dlg:
+        with dialogs.DlgPortSelector(self) as dlg:
             if dlg.ShowModal() == wx.ID_OK:
                 port = dlg.port
                 rdwrap.open(port)
-                wx.Config.Get().Write("port", port)
+                self.config.port = port
+                self.config.Save()
 
     def OnMenu_ID_FWUPDATE(self, evt):
-        if wx.Config.Get().ReadBool("mock_data", MOCK_DATA):
+        if self.config.mock_data:
             model = 60062
             fwver = 1.23
         else:
@@ -441,13 +399,45 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame):
                     return fh.read()
             self._update_firmware(int(os.stat(filename).st_size), read_firmware)
 
+    def OnMenu_ID_SETTINGS(self, evt):
+        with dialogs.DlgSettings(self) as dlg:
+            dlg = dlg # type: dialogs.DlgSettings
+            dlg.ShowModal()
+
     def OnMenu_wxID_EXIT(self, evt):
         self.Close()
 
     def OnClose(self, evt):
+        # type: (wx.CloseEvent) -> None
         self.reader.shutdown()
         self.reader.join()
+        self.config.Unsubscribe(self)
         evt.Skip()
+
+    def OnConfigChangeBegin(self):
+        self._config_changes = {}
+
+    def OnConfigChanged(self, name, value):
+        self._config_changes[name] = value
+
+    def OnConfigChangeEnd(self):
+        graph_dirty = False
+        if 'graph_seconds' in self._config_changes:
+            self.vaxis.set_xlim(-self._config_changes['graph_seconds'], 0)
+            self.aaxis.set_xlim(-self._config_changes['graph_seconds'], 0)
+            graph_dirty = True
+        if 'polling_interval' in self._config_changes:
+            # todo
+            pass
+        if 'voltage_range' in self._config_changes:
+            self.vaxis.set_ylim(0, self._config_changes['voltage_range'])
+            graph_dirty = True
+        if 'amperage_range' in self._config_changes:
+            self.aaxis.set_ylim(0, self._config_changes['amperage_range'])
+            graph_dirty = True
+        if graph_dirty:
+            self.figure_canvas.draw()
+        del self._config_changes
 
     def _update_firmware(self, firmware_size, read_firmware_func):
         # type: (int, Callable[[], bytes]) -> None
@@ -471,6 +461,7 @@ class App(wx.App):
         self.AppName = "RDGUI"
         self.VendorName = "Drastrom"
         self.VendorDisplayName = "Drästrøm"
+        self.config = config.Config()
         frame = CanvasFrame()
         self.SetTopWindow(frame)
         frame.Show(True)
