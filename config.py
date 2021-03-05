@@ -23,13 +23,13 @@ class ConfigChangeHandler(object):
 
 
 class Config(object):
-    _ReadWrite = collections.namedtuple('_ReadWrite', ('read', 'write'))
+    _ReadWrite = collections.namedtuple('_ReadWrite', ('readmethod', 'writemethod'))
     _TypeDefault = collections.namedtuple('_TypeDefault', ('typ', 'default'))
 
     _types = {
-        bool: _ReadWrite(wx.Config.ReadBool, wx.Config.WriteBool),
-        str: _ReadWrite(wx.Config.Read, wx.Config.Write),
-        float: _ReadWrite(wx.Config.ReadFloat, wx.Config.WriteFloat)
+        bool: _ReadWrite('ReadBool', 'WriteBool'),
+        str: _ReadWrite('Read', 'Write'),
+        float: _ReadWrite('ReadFloat', 'WriteFloat')
     }
 
     _props = {
@@ -52,7 +52,7 @@ class Config(object):
             return self._dirtyprops[name]
         elif name in self._props:
             p = self._props[name]
-            return self._types[p.typ].read(self._config, name, p.default)
+            return getattr(self._config, self._types[p.typ].readmethod)(name, p.default)
         else:
             return super(Config, self).__getattr__(name)
 
@@ -78,7 +78,7 @@ class Config(object):
                 pass
 
         for name, value in sorted(self._dirtyprops.items()):
-            self._types[self._props[name].typ].write(self._config, name, value)
+            getattr(self._config, self._types[self._props[name].typ].writemethod)(name, value)
             for handler in self._handlers:
                 try:
                     handler.OnConfigChanged(name, value)
