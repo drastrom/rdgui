@@ -47,6 +47,15 @@ rdgui_xrc.get_resources().AddHandler(xh_floatspin.FloatSpinCtrlXmlHandler())
 
 _ = wx.GetTranslation
 
+def ringbuffer_resize(ringbuffer, newcapacity):
+    # type: (RingBuffer, int) -> RingBuffer
+    newbuffer = RingBuffer(newcapacity, dtype=ringbuffer.dtype)
+    n = min(newcapacity, len(ringbuffer))
+    newbuffer._arr[0:n] = ringbuffer[-n:]
+    newbuffer._right_index = n
+    newbuffer._left_index = 0
+    return newbuffer
+
 class AttributeSetterCtx(object):
     def __init__(self, obj, attr, value):
         # type: (object, str, object) -> None
@@ -64,6 +73,22 @@ class AttributeSetterCtx(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         # type: (type, BaseException, types.TracebackType) -> bool
         setattr(self.obj, self.attr, self.old)
+        return False
+
+class UnlockerCtx(object):
+    def __init__(self, lock):
+        # type: (threading.Lock) -> None
+        super(UnlockerCtx, self).__init__()
+        self.lock = lock
+
+    def __enter__(self):
+        # type: () -> object
+        self.lock.release()
+        return self.lock
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # type: (type, BaseException, types.TracebackType) -> bool
+        self.lock.acquire()
         return False
 
 def emitter(p=0.1):
@@ -189,47 +214,75 @@ class RDWrapper(object):
 rdwrap = RDWrapper()
 
 class ReaderThread(threading.Thread, config.ConfigChangeHandler):
+    class _Command(object):
+        NONE = 0
+        SHUTDOWN = 1
+        CONFIGUPDATE = 2
+
     def __init__(self):
-        # type: (str) -> None
         super(ReaderThread, self).__init__()
         self.daemon = True
         self.config = wx.GetApp().config # type: config.Config
         self.config.Subscribe(self)
         self.polling_interval = self.config.polling_interval # type: float
         self.mock = self.config.mock_data # type: bool
-        graph_seconds = self.config.graph_seconds # type: float
-        self.running = True
+        self.graph_seconds = self.config.graph_seconds # type: float
+        self.command = self._Command.NONE
         self.datalock = threading.Lock()
-        self.shutdowncond = threading.Condition(self.datalock)
-        self.t = RingBuffer(int(graph_seconds/self.polling_interval), float)
-        self.v = RingBuffer(int(graph_seconds/self.polling_interval), float)
-        self.a = RingBuffer(int(graph_seconds/self.polling_interval), float)
+        self.commandcond = threading.Condition(self.datalock)
+        self.t = RingBuffer(int(self.graph_seconds/self.polling_interval), float)
+        self.v = RingBuffer(int(self.graph_seconds/self.polling_interval), float)
+        self.a = RingBuffer(int(self.graph_seconds/self.polling_interval), float)
 
     def shutdown(self):
         with self.datalock:
-            self.running = False
-            self.shutdowncond.notify()
+            self.command = self._Command.SHUTDOWN
+            self.commandcond.notify()
         self.config.Unsubscribe(self)
 
     def run(self):
         if self.mock:
             vgen = emitter()
             agen = emitter()
-        while self.running:
-            t = time()
-            if self.mock:
-                v = next(vgen)
-                a = next(agen)
-            else:
-                with rdwrap.lock:
-                    v, a = rdwrap.rd.measvoltagecurrent
-            print (time() - t, v, a)
-            with self.datalock:
+        with self.datalock:
+            while self.command != self._Command.SHUTDOWN:
+                if self.command == self._Command.CONFIGUPDATE:
+                    pass
+                self.command = self._Command.NONE
+                with UnlockerCtx(self.datalock):
+                    t = time()
+                    if self.mock:
+                        v = next(vgen)
+                        a = next(agen)
+                    else:
+                        with rdwrap.lock:
+                            v, a = rdwrap.rd.measvoltagecurrent
+                    print (time() - t, v, a)
                 self.t.append(t)
                 self.v.append(v)
                 self.a.append(a)
-                if self.running:
-                    self.shutdowncond.wait(max((t + self.polling_interval) - time(), 0))
+                if self.command == self._Command.NONE:
+                    self.commandcond.wait(max((t + self.polling_interval) - time(), 0))
+
+    def OnConfigChangeEnd(self, updates):
+        _dirty = False
+        for name in ('polling_interval', 'graph_seconds'):
+            if name in updates:
+                _dirty = True
+                break
+        if _dirty:
+            with self.datalock:
+                if 'polling_interval' in updates:
+                    self.polling_interval = updates['polling_interval']
+                if 'graph_seconds' in updates:
+                    self.graph_seconds = updates['graph_seconds']
+
+                self.t = ringbuffer_resize(self.t, int(self.graph_seconds/self.polling_interval))
+                self.v = ringbuffer_resize(self.v, int(self.graph_seconds/self.polling_interval))
+                self.a = ringbuffer_resize(self.a, int(self.graph_seconds/self.polling_interval))
+
+                self.command = self._Command.CONFIGUPDATE
+                self.commandcond.notify()
 
 class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
     def __init__(self, parent=None):
@@ -425,7 +478,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
             self.aaxis.set_xlim(-updates['graph_seconds'], 0)
             graph_dirty = True
         if 'polling_interval' in updates:
-            # todo
+            # TODO: update animation interval
             pass
         if 'voltage_range' in updates:
             self.vaxis.set_ylim(0, updates['voltage_range'])
