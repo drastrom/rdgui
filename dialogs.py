@@ -133,19 +133,12 @@ class DlgSettings(rdgui_xrc.xrcdlgSettings, config.ConfigChangeHandler):
             self.config.Save()
         self.wxID_APPLY.Enable(False)
 
-    def OnConfigChangeBegin(self):
-        self._config_changes = {}
-
-    def OnConfigChanged(self, name, value):
-        self._config_changes[name] = value
-
-    def OnConfigChangeEnd(self):
-        if 'graph_seconds' in self._config_changes:
-            self.ctlGraphSeconds.SetDefaultValue(self._config_changes['graph_seconds'])
-        if 'polling_interval' in self._config_changes:
-            self.ctlPollingInterval.SetDefaultValue(self._config_changes['polling_interval'])
-        if 'voltage_range' in self._config_changes:
-            self.ctlVoltageRange.SetDefaultValue(self._config_changes['voltage_range'])
-        if 'amperage_range' in self._config_changes:
-            self.ctlAmperageRange.SetDefaultValue(self._config_changes['amperage_range'])
-        del self._config_changes
+    def OnConfigChangeEnd(self, updates):
+        if 'graph_seconds' in updates:
+            self.ctlGraphSeconds.SetDefaultValue(updates['graph_seconds'])
+        if 'polling_interval' in updates:
+            self.ctlPollingInterval.SetDefaultValue(updates['polling_interval'])
+        if 'voltage_range' in updates:
+            self.ctlVoltageRange.SetDefaultValue(updates['voltage_range'])
+        if 'amperage_range' in updates:
+            self.ctlAmperageRange.SetDefaultValue(updates['amperage_range'])

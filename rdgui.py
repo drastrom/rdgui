@@ -418,30 +418,23 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
         self.config.Unsubscribe(self)
         evt.Skip()
 
-    def OnConfigChangeBegin(self):
-        self._config_changes = {}
-
-    def OnConfigChanged(self, name, value):
-        self._config_changes[name] = value
-
-    def OnConfigChangeEnd(self):
+    def OnConfigChangeEnd(self, updates):
         graph_dirty = False
-        if 'graph_seconds' in self._config_changes:
-            self.vaxis.set_xlim(-self._config_changes['graph_seconds'], 0)
-            self.aaxis.set_xlim(-self._config_changes['graph_seconds'], 0)
+        if 'graph_seconds' in updates:
+            self.vaxis.set_xlim(-updates['graph_seconds'], 0)
+            self.aaxis.set_xlim(-updates['graph_seconds'], 0)
             graph_dirty = True
-        if 'polling_interval' in self._config_changes:
+        if 'polling_interval' in updates:
             # todo
             pass
-        if 'voltage_range' in self._config_changes:
-            self.vaxis.set_ylim(0, self._config_changes['voltage_range'])
+        if 'voltage_range' in updates:
+            self.vaxis.set_ylim(0, updates['voltage_range'])
             graph_dirty = True
-        if 'amperage_range' in self._config_changes:
-            self.aaxis.set_ylim(0, self._config_changes['amperage_range'])
+        if 'amperage_range' in updates:
+            self.aaxis.set_ylim(0, updates['amperage_range'])
             graph_dirty = True
         if graph_dirty:
             self.figure_canvas.draw()
-        del self._config_changes
 
     def _update_firmware(self, firmware_size, read_firmware_func):
         # type: (int, Callable[[], bytes]) -> None

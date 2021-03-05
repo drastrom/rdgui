@@ -3,7 +3,7 @@
 
 import collections
 try:
-    from typing import List, Dict
+    from typing import List, Dict, Any
 except:
     pass
 import wx
@@ -15,10 +15,12 @@ class ConfigChangeHandler(object):
     def OnConfigChangeBegin(self):
         pass
 
-    def OnConfigChanged(self, name, value):
+    def OnConfigChanged(self, name, oldvalue, newvalue):
+        # type: (str, Any, Any) -> None
         pass
 
-    def OnConfigChangeEnd(self):
+    def OnConfigChangeEnd(self, updates):
+        # type: (Dict[str, Any]) -> None
         pass
 
 
@@ -45,7 +47,7 @@ class Config(object):
         super(Config, self).__init__()
         self._config = wx.Config.Get() # type: wx.ConfigBase
         self._handlers = [] # type: List[ConfigChangeHandler]
-        self._dirtyprops = {} # type: Dict[str]
+        self._dirtyprops = {} # type: Dict[str, Any]
 
     def __getattr__(self, name):
         if name in self._dirtyprops:
@@ -77,17 +79,21 @@ class Config(object):
             except:
                 pass
 
-        for name, value in sorted(self._dirtyprops.items()):
-            getattr(self._config, self._types[self._props[name].typ].writemethod)(name, value)
+        updates = self._dirtyprops
+        self._dirtyprops = {}
+
+        for name, newvalue in sorted(updates.items()):
+            oldvalue = getattr(self, name)
+            getattr(self._config, self._types[self._props[name].typ].writemethod)(name, newvalue)
             for handler in self._handlers:
                 try:
-                    handler.OnConfigChanged(name, value)
+                    handler.OnConfigChanged(name, oldvalue, newvalue)
                 except:
                     pass
 
         for handler in self._handlers:
             try:
-                handler.OnConfigChangeEnd()
+                handler.OnConfigChangeEnd(updates)
             except:
                 pass
 
