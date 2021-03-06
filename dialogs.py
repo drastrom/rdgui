@@ -86,21 +86,14 @@ class DlgSettings(rdgui_xrc.xrcdlgSettings, config.ConfigChangeHandler):
         self.config.Unsubscribe(self)
         evt.Skip()
 
-    def OnSpinctrl_ctlGraphSeconds(self, evt):
+    def OnSpinctrl(self, evt):
         # type: (wx.CommandEvent) -> None
         self.wxID_APPLY.Enable()
 
-    def OnSpinctrl_ctlPollingInterval(self, evt):
-        # type: (wx.CommandEvent) -> None
-        self.wxID_APPLY.Enable()
-
-    def OnSpinctrl_ctlVoltageRange(self, evt):
-       # type: (wx.CommandEvent) -> None
-        self.wxID_APPLY.Enable()
-
-    def OnSpinctrl_ctlAmperageRange(self, evt):
-       # type: (wx.CommandEvent) -> None
-        self.wxID_APPLY.Enable()
+    OnSpinctrl_ctlGraphSeconds = OnSpinctrl
+    OnSpinctrl_ctlPollingInterval = OnSpinctrl
+    OnSpinctrl_ctlVoltageRange = OnSpinctrl
+    OnSpinctrl_ctlAmperageRange = OnSpinctrl
 
     def OnButton_wxID_OK(self, evt):
         # type: (wx.CommandEvent) -> None
