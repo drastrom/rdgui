@@ -238,6 +238,7 @@ class ReaderThread(threading.Thread, config.ConfigChangeHandler):
         with self.datalock:
             self.command = self._Command.SHUTDOWN
             self.commandcond.notify()
+        self.join()
         self.config.Unsubscribe(self)
 
     def run(self):
@@ -265,12 +266,12 @@ class ReaderThread(threading.Thread, config.ConfigChangeHandler):
                     self.commandcond.wait(max((t + self.polling_interval) - time(), 0))
 
     def OnConfigChangeEnd(self, updates):
-        _dirty = False
+        dirty = False
         for name in ('polling_interval', 'graph_seconds'):
             if name in updates:
-                _dirty = True
+                dirty = True
                 break
-        if _dirty:
+        if dirty:
             with self.datalock:
                 if 'polling_interval' in updates:
                     self.polling_interval = updates['polling_interval']
@@ -468,7 +469,6 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
     def OnClose(self, evt):
         # type: (wx.CloseEvent) -> None
         self.reader.shutdown()
-        self.reader.join()
         self.config.Unsubscribe(self)
         evt.Skip()
 
