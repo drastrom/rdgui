@@ -3,10 +3,12 @@
 
 import collections
 try:
-    from typing import List, Dict, Any
+    from typing import Dict, Any
 except:
     pass
+from weakref import WeakSet
 import wx
+
 
 class ConfigChangeHandler(object):
     def __init__(self):
@@ -46,7 +48,7 @@ class Config(object):
     def __init__(self):
         super(Config, self).__init__()
         self._config = wx.Config.Get() # type: wx.ConfigBase
-        self._handlers = [] # type: List[ConfigChangeHandler]
+        self._handlers = WeakSet() # type: WeakSet[ConfigChangeHandler]
         self._dirtyprops = {} # type: Dict[str, Any]
 
     def __getattr__(self, name):
@@ -66,7 +68,7 @@ class Config(object):
 
     def Subscribe(self, handler):
         # type: (ConfigChangeHandler) -> None
-        self._handlers.append(handler)
+        self._handlers.add(handler)
 
     def Unsubscribe(self, handler):
         # type: (ConfigChangeHandler) -> None
