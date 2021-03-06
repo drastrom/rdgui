@@ -335,6 +335,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
         self.vaxis.set_xlabel('t')
         self.vaxis.set_ylabel('V')
         self.vaxis.yaxis.set_minor_locator(AutoMinorLocator(4))
+        self.vaxis.grid(axis='x', linestyle='--')
         self.vaxis.grid(which='both', axis='y', linestyle='--')
 
         self.aaxis = self.vaxis.twinx()
