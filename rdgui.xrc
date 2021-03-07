@@ -152,6 +152,17 @@
       <object class="sizeritem">
         <object class="wxListCtrl" name="ctlComportList">
           <style>wxLC_REPORT|wxLC_SINGLE_SEL</style>
+          <object class="listcol">
+            <text>Port</text>
+          </object>
+          <object class="listcol">
+            <text>Description</text>
+            <width>150</width>
+          </object>
+          <object class="listcol">
+            <text>Hardware ID</text>
+            <width>200</width>
+          </object>
           <XRCED>
             <events>EVT_LIST_ITEM_SELECTED|EVT_LIST_ITEM_DESELECTED|EVT_LIST_ITEM_ACTIVATED</events>
             <assign_var>1</assign_var>

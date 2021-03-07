@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import itertools
 import wx
 import wx.lib.agw.floatspin
 
@@ -14,22 +15,29 @@ import rdgui_xrc
 _ = wx.GetTranslation
 
 
+def appendlistitem(listctrl, *args):
+    # type: (wx.ListCtrl, str) -> int
+    pos = listctrl.GetItemCount()
+    for i, text in zip(itertools.count(), args):
+        li = wx.ListItem()
+        li.Id = pos
+        li.Column = i
+        li.Text = text
+        if i == 0:
+            pos = listctrl.InsertItem(li)
+        else:
+            listctrl.SetItem(li)
+    return pos
+
 class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
     def __init__(self, parent):
         super(DlgPortSelector, self).__init__(parent)
         self.ctlComportList = self.ctlComportList # type: wx.ListCtrl
-        self.ctlComportList.InsertColumn(self.ctlComportList.GetColumnCount(), "port")
-        self.ctlComportList.InsertColumn(self.ctlComportList.GetColumnCount(), "desc", width=150)
-        self.ctlComportList.InsertColumn(self.ctlComportList.GetColumnCount(), "hwid", width=200)
         if wx.GetApp().config.mock_data:
-            pos = self.ctlComportList.InsertStringItem(self.ctlComportList.GetItemCount(), "port")
-            self.ctlComportList.SetStringItem(pos, 1, "desc")
-            self.ctlComportList.SetStringItem(pos, 2, "hwid")
+            appendlistitem(self.ctlComportList, "port", "desc", "hwid")
         import serial.tools.list_ports
         for port, desc, hwid in serial.tools.list_ports.comports():
-            pos = self.ctlComportList.InsertStringItem(self.ctlComportList.GetItemCount(), port)
-            self.ctlComportList.SetStringItem(pos, 1, desc)
-            self.ctlComportList.SetStringItem(pos, 2, hwid)
+            appendlistitem(self.ctlComportList, port, desc, hwid)
         self.wxID_OK.Enable(False)
 
     def OnButton_wxID_CANCEL(self, evt):
