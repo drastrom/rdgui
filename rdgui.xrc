@@ -154,6 +154,7 @@
           <style>wxLC_REPORT|wxLC_SINGLE_SEL</style>
           <object class="listcol">
             <text>Port</text>
+            <width>100</width>
           </object>
           <object class="listcol">
             <text>Description</text>
