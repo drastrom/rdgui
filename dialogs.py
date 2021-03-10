@@ -33,6 +33,7 @@ class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
     def __init__(self, parent):
         super(DlgPortSelector, self).__init__(parent)
         self.ctlComportList = self.ctlComportList # type: wx.ListCtrl
+        self.wxID_OK = self.wxID_OK # type: wx.Button
         if wx.GetApp().config.mock_data:
             appendlistitem(self.ctlComportList, "port", "desc", "hwid")
         import serial.tools.list_ports
