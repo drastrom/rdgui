@@ -83,7 +83,7 @@
                   <assign_var>1</assign_var>
                 </XRCED>
               </object>
-              <flag>wxRIGHT</flag>
+              <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
               <border>7</border>
             </object>
             <object class="sizeritem">
@@ -104,6 +104,7 @@
                   <assign_var>1</assign_var>
                 </XRCED>
               </object>
+              <flag>wxALIGN_CENTRE_VERTICAL</flag>
             </object>
             <object class="spacer">
               <option>1</option>
@@ -117,7 +118,7 @@
                   <events>EVT_BUTTON</events>
                 </XRCED>
               </object>
-              <flag>wxRIGHT</flag>
+              <flag>wxRIGHT|wxALIGN_CENTRE_VERTICAL</flag>
               <border>7</border>
             </object>
             <object class="sizeritem">
@@ -128,6 +129,7 @@
                   <assign_var>1</assign_var>
                 </XRCED>
               </object>
+              <flag>wxALIGN_CENTRE_VERTICAL</flag>
             </object>
             <orient>wxHORIZONTAL</orient>
           </object>
