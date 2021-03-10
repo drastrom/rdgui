@@ -133,6 +133,7 @@
             </object>
             <orient>wxHORIZONTAL</orient>
           </object>
+          <bg>#FFFFFF</bg>
         </object>
         <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND</flag>
         <border>7</border>
