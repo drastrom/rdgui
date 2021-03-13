@@ -9,25 +9,12 @@ import wx.lib.agw.floatspin
 
 import config
 import rdgui_xrc
+from utils import appendlistitem
 
 # assume main module added our XmlResourceHandler
 
 _ = wx.GetTranslation
 
-
-def appendlistitem(listctrl, *args):
-    # type: (wx.ListCtrl, str) -> int
-    pos = listctrl.GetItemCount()
-    for i, text in zip(itertools.count(), args):
-        li = wx.ListItem()
-        li.Id = pos
-        li.Column = i
-        li.Text = text
-        if i == 0:
-            pos = listctrl.InsertItem(li)
-        else:
-            listctrl.SetItem(li)
-    return pos
 
 class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
     def __init__(self, parent):

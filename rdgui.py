@@ -12,7 +12,6 @@ import sys
 import threading
 from time import time
 import traceback
-import types
 try:
     from typing import Callable
 except:
@@ -35,70 +34,19 @@ import wx.lib.agw.floatspin
 import wx.lib.dialogs
 
 import config
-import rdgui_xrc
-import xh_floatspin
 import dialogs
+import rdgui_xrc
+from utils import AttributeSetterCtx, UnlockerCtx, ringbuffer_resize, emitter
+import xh_floatspin
+
 import submodpaths
 submodpaths.add_to_path()
-
 import rd6006
 
 rdgui_xrc.get_resources().AddHandler(xh_floatspin.FloatSpinCtrlXmlHandler())
 
 _ = wx.GetTranslation
 
-def ringbuffer_resize(ringbuffer, newcapacity):
-    # type: (RingBuffer, int) -> RingBuffer
-    newbuffer = RingBuffer(newcapacity, dtype=ringbuffer.dtype)
-    n = min(newcapacity, len(ringbuffer))
-    newbuffer._arr[0:n] = ringbuffer[-n:]
-    newbuffer._right_index = n
-    newbuffer._left_index = 0
-    return newbuffer
-
-class AttributeSetterCtx(object):
-    def __init__(self, obj, attr, value):
-        # type: (object, str, object) -> None
-        super(AttributeSetterCtx, self).__init__()
-        self.obj = obj
-        self.attr = attr
-        self.value = value
-
-    def __enter__(self):
-        # type () -> object
-        self.old = getattr(self.obj, self.attr)
-        setattr(self.obj, self.attr, self.value)
-        return self.obj
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        # type: (type, BaseException, types.TracebackType) -> bool
-        setattr(self.obj, self.attr, self.old)
-        return False
-
-class UnlockerCtx(object):
-    def __init__(self, lock):
-        # type: (threading.Lock) -> None
-        super(UnlockerCtx, self).__init__()
-        self.lock = lock
-
-    def __enter__(self):
-        # type: () -> object
-        self.lock.release()
-        return self.lock
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        # type: (type, BaseException, types.TracebackType) -> bool
-        self.lock.acquire()
-        return False
-
-def emitter(p=0.1):
-    """Return a random value in [0, 1) with probability p, else 0."""
-    while True:
-        v = np.random.rand(1)
-        if v > p:
-            yield 0.
-        else:
-            yield np.random.rand(1)
 
 class RD6006(rd6006.RD6006):
     def __init__(self, *args, **kwargs):
@@ -210,8 +158,8 @@ class RDWrapper(object):
                 self.rd.instrument.serial.close()
             self.rd = RD6006(port)
 
-
 rdwrap = RDWrapper()
+
 
 class ReaderThread(threading.Thread, config.ConfigChangeHandler):
     class _Command(object):
@@ -284,6 +232,7 @@ class ReaderThread(threading.Thread, config.ConfigChangeHandler):
 
                 self.command = self._Command.CONFIGUPDATE
                 self.commandcond.notify()
+
 
 class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
     def __init__(self, parent=None):
