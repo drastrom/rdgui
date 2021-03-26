@@ -318,7 +318,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
                 v = self.vaxis.transData.inverted().transform((event.x, event.y))[1]
                 a = event.ydata
             self.SetStatusText(
-                "t={:.3f}  V={:.3f}  A={:.3f}".format(event.xdata, v, a))
+                "t={:.3f}  V={:.2f}  A={:.3f}".format(event.xdata, v, a))
         else:
             self.SetStatusText("")
 
@@ -330,7 +330,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
             self.vline.set_data(t, v)
             self.aline.set_data(t, a)
             if self and len(v) > 0 and len(a) > 0:
-                self.SetStatusText("Last V={:.3f}  A={:.3f}".format(v[-1], a[-1]), 1)
+                self.SetStatusText("Last V={:.2f}  A={:.3f}".format(v[-1], a[-1]), 1)
         return self.vline, self.aline
 
     def OnButton_btnUpdate(self, evt):
