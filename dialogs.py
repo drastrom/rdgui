@@ -3,11 +3,19 @@
 
 from __future__ import print_function
 
-import itertools
+import traceback
 import wx
 import wx.lib.agw.floatspin
+import wx.lib.dialogs
+import wx.xrc as xrc
+
+try:
+    from typing import Tuple
+except:
+        pass
 
 import config
+import rdgui
 import rdgui_xrc
 from utils import appendlistitem
 
@@ -131,3 +139,84 @@ class DlgSettings(rdgui_xrc.xrcdlgSettings, config.ConfigChangeHandler):
             self.ctlVoltageRange.SetDefaultValue(updates['voltage_range'])
         if 'amperage_range' in updates:
             self.ctlAmperageRange.SetDefaultValue(updates['amperage_range'])
+
+
+class DlgCalibration(rdgui_xrc.xrcdlgCalibration):
+    def __init__(self, parent, rdwrap):
+        # type: (wx.Window, rdgui.RDWrapper) -> None
+        super(DlgCalibration, self).__init__(parent)
+        self.rdwrap = rdwrap
+
+        self.spinctrls = (
+            xrc.XRCCTRL(self, "ctlVOutputZero"),
+            xrc.XRCCTRL(self, "ctlVOutputScale"),
+            xrc.XRCCTRL(self, "ctlVReadbackZero"),
+            xrc.XRCCTRL(self, "ctlVReadbackScale"),
+            xrc.XRCCTRL(self, "ctlAOutputZero"),
+            xrc.XRCCTRL(self, "ctlAOutputScale"),
+            xrc.XRCCTRL(self, "ctlAReadbackZero"),
+            xrc.XRCCTRL(self, "ctlAReadbackScale"),
+        ) # type: Tuple[wx.SpinCtrl, ...]
+
+        if wx.GetApp().config.mock_data:
+            self.initial_regs = [21, 22872, 21, 17525, 210, 21451, 76, 17388]
+        else:
+            with self.rdwrap.lock:
+                self.initial_regs = self.rdwrap.rd._read_registers(0x37, 8) # type: list[int]
+
+        for ctrl, reg in zip(self.spinctrls, self.initial_regs):
+            ctrl.SetValue(reg)
+
+    def DoCancel(self, id):
+        # type: (int) -> None
+        try:
+            with self.rdwrap.lock:
+                self.rdwrap.rd._write_registers(0x37, self.initial_regs)
+        except:
+            wx.lib.dialogs.MultiMessageBox(
+                _("An error occurred while attempting to restore calibration data"),
+                _("Error restoring calibration data"),
+                traceback.format_exc(), wx.OK|wx.ICON_ERROR, self)
+        self.EndModal(id)
+
+    def OnClose(self, evt):
+        # type: (wx.CloseEvent) -> None
+        self.DoCancel(wx.ID_CLOSE)
+        evt.Skip()
+
+    def OnButton_wxID_OK(self, evt):
+        # type: (wx.CommandEvent) -> None
+        ans = wx.MessageBox(
+            "{}\n\n{}".format(
+                _("Are you sure you want to commit calibration data?"),
+                _("Note: calibration data can be reset to default by holding \"1\" while powering on the unit.")
+            ),
+            _("Commit calibration data"),
+            wx.YES_NO|wx.NO_DEFAULT|wx.ICON_WARNING,
+            self)
+        if ans == wx.YES:
+            regs = [ctrl.GetValue() for ctrl in self.spinctrls]
+            with self.rdwrap.lock:
+                # TODO: should we do this or rely on the SpinEvents?
+                self.rdwrap.rd._write_registers(0x37, regs)
+                self.rdwrap.rd._write_register(0x36, 0x1501)
+            self.EndModal(evt.Id)
+
+    def OnButton_wxID_CANCEL(self, evt):
+        # type: (wx.CommandEvent) -> None
+        self.DoCancel(evt.Id)
+
+    def OnSpinctrl(self, evt):
+        # type: (wx.SpinEvent) -> None
+        i = self.spinctrls.index(evt.EventObject)
+        with self.rdwrap.lock:
+            self.rdwrap.rd._write_register(0x37 + i, evt.GetInt())
+
+    OnSpinctrl_ctlVOutputZero = OnSpinctrl
+    OnSpinctrl_ctlVOutputScale = OnSpinctrl
+    OnSpinctrl_ctlVReadbackZero = OnSpinctrl
+    OnSpinctrl_ctlVReadbackScale = OnSpinctrl
+    OnSpinctrl_ctlAOutputZero = OnSpinctrl
+    OnSpinctrl_ctlAOutputScale = OnSpinctrl
+    OnSpinctrl_ctlAReadbackZero = OnSpinctrl
+    OnSpinctrl_ctlAReadbackScale = OnSpinctrl

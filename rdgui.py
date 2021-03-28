@@ -407,6 +407,11 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
                     return fh.read()
             self._update_firmware(int(os.stat(filename).st_size), read_firmware)
 
+    def OnMenu_ID_CALIBRATE(self, evt):
+        with dialogs.DlgCalibration(self, rdwrap) as dlg:
+            dlg = dlg # type: dialogs.DlgCalibration
+            dlg.ShowModal()
+
     def OnMenu_ID_SETTINGS(self, evt):
         with dialogs.DlgSettings(self) as dlg:
             dlg = dlg # type: dialogs.DlgSettings

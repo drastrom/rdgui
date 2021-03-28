@@ -21,7 +21,14 @@
         <label>&amp;File</label>
       </object>
       <object class="wxMenu" name="ID_TOOLS">
-        <label>&amp;Tools</label>
+        <object class="wxMenuItem" name="ID_CALIBRATE">
+          <label>&amp;Calibrate...</label>
+          <bitmap>resources/preferences-system-16.png</bitmap>
+          <XRCED>
+            <events>EVT_MENU</events>
+          </XRCED>
+        </object>
+        <object class="separator"/>
         <object class="wxMenuItem" name="ID_FWUPDATE">
           <label>Check for Firmware U&amp;pdate...</label>
           <bitmap>resources/internet-16.png</bitmap>
@@ -36,6 +43,7 @@
             <events>EVT_MENU</events>
           </XRCED>
         </object>
+        <label>&amp;Tools</label>
       </object>
       <object class="wxMenu" name="ID_VIEW">
         <label>&amp;View</label>
@@ -323,6 +331,214 @@
       </object>
     </object>
     <title>Settings</title>
+    <XRCED>
+      <events>EVT_CLOSE</events>
+    </XRCED>
+  </object>
+  <object class="wxDialog" name="dlgCalibration">
+    <object class="wxBoxSizer">
+      <object class="sizeritem">
+        <object class="wxBoxSizer">
+          <object class="sizeritem">
+            <object class="wxStaticBoxSizer">
+              <label>Voltage</label>
+              <orient>wxVERTICAL</orient>
+              <object class="sizeritem">
+                <object class="wxFlexGridSizer">
+                  <object class="sizeritem">
+                    <object class="wxStaticText">
+                      <label>Output Zero:</label>
+                    </object>
+                    <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxSpinCtrl" name="ctlVOutputZero">
+                      <size>60,-1</size>
+                      <min>0</min>
+                      <max>65535</max>
+                      <XRCED>
+                        <events>EVT_SPINCTRL</events>
+                      </XRCED>
+                    </object>
+                    <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxStaticText">
+                      <label>Output Scale:</label>
+                    </object>
+                    <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxSpinCtrl" name="ctlVOutputScale">
+                      <min>0</min>
+                      <max>65535</max>
+                      <XRCED>
+                        <events>EVT_SPINCTRL</events>
+                      </XRCED>
+                    </object>
+                    <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxStaticText">
+                      <label>Readback Zero:</label>
+                    </object>
+                    <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxSpinCtrl" name="ctlVReadbackZero">
+                      <min>0</min>
+                      <max>65535</max>
+                      <XRCED>
+                        <events>EVT_SPINCTRL</events>
+                      </XRCED>
+                    </object>
+                    <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxStaticText">
+                      <label>Readback Scale:</label>
+                    </object>
+                    <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxSpinCtrl" name="ctlVReadbackScale">
+                      <min>0</min>
+                      <max>65535</max>
+                      <XRCED>
+                        <events>EVT_SPINCTRL</events>
+                      </XRCED>
+                    </object>
+                    <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <cols>2</cols>
+                  <rows>4</rows>
+                  <vgap>7</vgap>
+                  <hgap>4</hgap>
+                  <growablecols>1</growablecols>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+            </object>
+            <option>1</option>
+            <flag>wxRIGHT|wxEXPAND</flag>
+            <border>4</border>
+          </object>
+          <object class="sizeritem">
+            <object class="wxStaticBoxSizer">
+              <label>Amperage</label>
+              <orient>wxVERTICAL</orient>
+              <object class="sizeritem">
+                <object class="wxFlexGridSizer">
+                  <object class="sizeritem">
+                    <object class="wxStaticText">
+                      <label>Output Zero:</label>
+                    </object>
+                    <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxSpinCtrl" name="ctlAOutputZero">
+                      <size>60,-1</size>
+                      <min>0</min>
+                      <max>65535</max>
+                      <XRCED>
+                        <events>EVT_SPINCTRL</events>
+                      </XRCED>
+                    </object>
+                    <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxStaticText">
+                      <label>Output Scale:</label>
+                    </object>
+                    <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxSpinCtrl" name="ctlAOutputScale">
+                      <min>0</min>
+                      <max>65535</max>
+                      <XRCED>
+                        <events>EVT_SPINCTRL</events>
+                      </XRCED>
+                    </object>
+                    <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxStaticText">
+                      <label>Readback Zero:</label>
+                    </object>
+                    <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxSpinCtrl" name="ctlAReadbackZero">
+                      <min>0</min>
+                      <max>65535</max>
+                      <XRCED>
+                        <events>EVT_SPINCTRL</events>
+                      </XRCED>
+                    </object>
+                    <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxStaticText">
+                      <label>Readback Scale:</label>
+                    </object>
+                    <flag>wxALIGN_RIGHT|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <object class="sizeritem">
+                    <object class="wxSpinCtrl" name="ctlAReadbackScale">
+                      <min>0</min>
+                      <max>65535</max>
+                      <XRCED>
+                        <events>EVT_SPINCTRL</events>
+                      </XRCED>
+                    </object>
+                    <flag>wxEXPAND|wxALIGN_CENTRE_VERTICAL</flag>
+                  </object>
+                  <cols>2</cols>
+                  <rows>4</rows>
+                  <vgap>7</vgap>
+                  <hgap>4</hgap>
+                  <growablecols>1</growablecols>
+                </object>
+                <option>1</option>
+                <flag>wxEXPAND</flag>
+              </object>
+            </object>
+            <option>1</option>
+            <flag>wxLEFT|wxEXPAND</flag>
+            <border>3</border>
+          </object>
+          <orient>wxHORIZONTAL</orient>
+        </object>
+        <option>1</option>
+        <flag>wxALL|wxEXPAND</flag>
+        <border>7</border>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStdDialogButtonSizer">
+          <object class="button">
+            <object class="wxButton" name="wxID_OK">
+              <default>1</default>
+              <XRCED>
+                <events>EVT_BUTTON</events>
+              </XRCED>
+            </object>
+          </object>
+          <object class="button">
+            <object class="wxButton" name="wxID_CANCEL">
+              <XRCED>
+                <events>EVT_BUTTON</events>
+              </XRCED>
+            </object>
+          </object>
+        </object>
+        <flag>wxBOTTOM|wxLEFT|wxRIGHT|wxEXPAND</flag>
+        <border>7</border>
+      </object>
+      <orient>wxVERTICAL</orient>
+    </object>
+    <title>Calibration</title>
     <XRCED>
       <events>EVT_CLOSE</events>
     </XRCED>
