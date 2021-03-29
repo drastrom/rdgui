@@ -159,7 +159,7 @@ class DlgCalibration(rdgui_xrc.xrcdlgCalibration):
         ) # type: Tuple[wx.SpinCtrl, ...]
 
         if wx.GetApp().config.mock_data:
-            self.initial_regs = [21, 22872, 21, 17525, 210, 21451, 76, 17388]
+            self.initial_regs = [18, 22802, 22, 17585, 276, 21458, 77, 17418]
         else:
             with self.rdwrap.lock:
                 self.initial_regs = self.rdwrap.rd._read_registers(0x37, 8) # type: list[int]
