@@ -417,7 +417,8 @@
                   <growablecols>1</growablecols>
                 </object>
                 <option>1</option>
-                <flag>wxEXPAND</flag>
+                <flag>wxALL|wxEXPAND</flag>
+                <border>4</border>
               </object>
             </object>
             <option>1</option>
@@ -502,7 +503,8 @@
                   <growablecols>1</growablecols>
                 </object>
                 <option>1</option>
-                <flag>wxEXPAND</flag>
+                <flag>wxALL|wxEXPAND</flag>
+                <border>4</border>
               </object>
             </object>
             <option>1</option>
