@@ -167,23 +167,6 @@ class DlgCalibration(rdgui_xrc.xrcdlgCalibration):
         for ctrl, reg in zip(self.spinctrls, self.initial_regs):
             ctrl.SetValue(reg)
 
-    def DoCancel(self, id):
-        # type: (int) -> None
-        try:
-            with self.rdwrap.lock:
-                self.rdwrap.rd._write_registers(0x37, self.initial_regs)
-        except:
-            wx.lib.dialogs.MultiMessageBox(
-                _("An error occurred while attempting to restore calibration data"),
-                _("Error restoring calibration data"),
-                traceback.format_exc(), wx.OK|wx.ICON_ERROR, self)
-        self.EndModal(id)
-
-    def OnClose(self, evt):
-        # type: (wx.CloseEvent) -> None
-        self.DoCancel(wx.ID_CLOSE)
-        evt.Skip()
-
     def OnButton_wxID_OK(self, evt):
         # type: (wx.CommandEvent) -> None
         ans = wx.MessageBox(
@@ -204,7 +187,15 @@ class DlgCalibration(rdgui_xrc.xrcdlgCalibration):
 
     def OnButton_wxID_CANCEL(self, evt):
         # type: (wx.CommandEvent) -> None
-        self.DoCancel(evt.Id)
+        try:
+            with self.rdwrap.lock:
+                self.rdwrap.rd._write_registers(0x37, self.initial_regs)
+        except:
+            wx.lib.dialogs.MultiMessageBox(
+                _("An error occurred while attempting to restore calibration data"),
+                _("Error restoring calibration data"),
+                traceback.format_exc(), wx.OK|wx.ICON_ERROR, self)
+        self.EndModal(evt.Id)
 
     def OnSpinctrl(self, evt):
         # type: (wx.SpinEvent) -> None

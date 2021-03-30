@@ -539,8 +539,5 @@
       <orient>wxVERTICAL</orient>
     </object>
     <title>Calibration</title>
-    <XRCED>
-      <events>EVT_CLOSE</events>
-    </XRCED>
   </object>
 </resource>
