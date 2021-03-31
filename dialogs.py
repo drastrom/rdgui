@@ -24,6 +24,27 @@ from utils import appendlistitem
 _ = wx.GetTranslation
 
 
+class WrappedMultiMessageDialog(wx.lib.dialogs.MultiMessageDialog):
+    def __init__(self, parent, message, caption = "Message Box", msg2="",
+                 style = wx.OK | wx.CANCEL, pos = wx.DefaultPosition, icon=None,
+                 btnLabels=None):
+        super(WrappedMultiMessageDialog, self).__init__(parent, message, caption,
+                                                        msg2, style, pos, icon, btnLabels)
+        # this is evil
+        for w in self.Children:
+            if isinstance(w, wx.TextCtrl) and (w.WindowStyle & wx.TE_DONTWRAP) != 0:
+                new = wx.TextCtrl(self, value=w.Value,
+                                  style=(w.WindowStyle & ~(wx.TE_DONTWRAP|wx.HSCROLL)) | wx.TE_BESTWRAP)
+                new.SetMinSize(w.GetMinSize())
+                self.Sizer.Replace(w, new, True)
+                w.Destroy()
+        self.Layout()
+        self.Bind(wx.EVT_CLOSE, self.OnClose)
+
+    def OnClose(self, evt):
+        self.EndModal(wx.ID_CLOSE)
+
+
 class DlgPortSelector(rdgui_xrc.xrcdlgPortSelector):
     def __init__(self, parent):
         super(DlgPortSelector, self).__init__(parent)

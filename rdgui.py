@@ -31,7 +31,6 @@ import numpy as np
 from numpy_ringbuffer import RingBuffer
 import wx
 import wx.lib.agw.floatspin
-import wx.lib.dialogs
 
 import config
 import dialogs
@@ -374,23 +373,12 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
         with contextlib.closing(urlopen(url)) as fp:
             updata = json.load(fp, strict=False)
 
-        with wx.lib.dialogs.MultiMessageDialog(self, _("Device firmware version {:.2f} -> Online version {:.2f}, released {}").format(
+        with dialogs.WrappedMultiMessageDialog(self, _("Device firmware version {:.2f} -> Online version {:.2f}, released {}").format(
             fwver, float(updata["Version"]), updata["Time"]), _("Update firmware?"),
             _("{}\nHistory:\n\n{}").format(updata["UpdateContent"], updata["History"]),
              wx.YES_NO|wx.ICON_QUESTION
         ) as mb:
-            mb = mb # type: wx.lib.dialogs.MultiMessageDialog
-            # this is evil
-            for w in mb.Children:
-                if isinstance(w, wx.TextCtrl) and (w.WindowStyle & wx.TE_DONTWRAP) != 0:
-                    new = wx.TextCtrl(mb, value=w.Value, style=(w.WindowStyle & ~(wx.TE_DONTWRAP|wx.HSCROLL)) | wx.TE_BESTWRAP)
-                    new.SetMinSize(w.GetMinSize())
-                    mb.Sizer.Replace(w, new, True)
-                    w.Destroy()
-            def OnMbClose(evt):
-                mb.EndModal(wx.ID_CANCEL)
-            mb.Bind(wx.EVT_CLOSE, OnMbClose)
-            mb.Layout()
+            mb = mb # type: dialogs.WrappedMultiMessageDialog
             ans = mb.ShowModal()
         if ans == wx.ID_YES:
             def read_firmware():
