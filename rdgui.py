@@ -8,7 +8,7 @@ import json
 import math
 import os
 import threading
-from time import time
+from time import localtime, time
 import traceback
 try:
     from typing import Callable
@@ -280,6 +280,12 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
         with dialogs.DlgCalibration(self) as dlg:
             dlg = dlg # type: dialogs.DlgCalibration
             dlg.ShowModal()
+
+    def OnMenu_ID_SYNC_TIME(self, evt):
+        with rdwrap.lock:
+            # eww, sleep holding lock
+            wx.MicroSleep(int((1 - math.modf(time())[0]) * 1e6))
+            rdwrap.rd._write_registers(48, list(localtime(time()+1)[0:6]))
 
     def OnMenu_ID_SETTINGS(self, evt):
         with dialogs.DlgSettings(self) as dlg:

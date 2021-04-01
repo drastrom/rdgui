@@ -21,6 +21,13 @@
         <label>&amp;File</label>
       </object>
       <object class="wxMenu" name="ID_TOOLS">
+        <object class="wxMenuItem" name="ID_SYNC_TIME">
+          <label>Sync &amp;Time</label>
+          <bitmap>resources/appointment-new-16.png</bitmap>
+          <XRCED>
+            <events>EVT_MENU</events>
+          </XRCED>
+        </object>
         <object class="wxMenuItem" name="ID_CALIBRATE">
           <label>&amp;Calibrate...</label>
           <bitmap>resources/preferences-system-16.png</bitmap>
