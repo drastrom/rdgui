@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 
+from __future__ import print_function
+
 import collections
 try:
     from typing import Dict, Any

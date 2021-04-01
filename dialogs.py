@@ -15,7 +15,7 @@ except:
         pass
 
 import config
-import rdgui
+from rd60xx import rdwrap
 import rdgui_xrc
 from utils import appendlistitem
 
@@ -163,10 +163,8 @@ class DlgSettings(rdgui_xrc.xrcdlgSettings, config.ConfigChangeHandler):
 
 
 class DlgCalibration(rdgui_xrc.xrcdlgCalibration):
-    def __init__(self, parent, rdwrap):
-        # type: (wx.Window, rdgui.RDWrapper) -> None
+    def __init__(self, parent):
         super(DlgCalibration, self).__init__(parent)
-        self.rdwrap = rdwrap
 
         self.spinctrls = (
             xrc.XRCCTRL(self, "ctlVOutputZero"),
@@ -182,8 +180,8 @@ class DlgCalibration(rdgui_xrc.xrcdlgCalibration):
         if wx.GetApp().config.mock_data:
             self.initial_regs = [18, 22802, 22, 17585, 276, 21458, 77, 17418]
         else:
-            with self.rdwrap.lock:
-                self.initial_regs = self.rdwrap.rd._read_registers(0x37, 8) # type: list[int]
+            with rdwrap.lock:
+                self.initial_regs = rdwrap.rd._read_registers(0x37, 8) # type: list[int]
 
         for ctrl, reg in zip(self.spinctrls, self.initial_regs):
             ctrl.SetValue(reg)
@@ -200,17 +198,17 @@ class DlgCalibration(rdgui_xrc.xrcdlgCalibration):
             self)
         if ans == wx.YES:
             regs = [ctrl.GetValue() for ctrl in self.spinctrls]
-            with self.rdwrap.lock:
+            with rdwrap.lock:
                 # TODO: should we do this or rely on the SpinEvents?
-                self.rdwrap.rd._write_registers(0x37, regs)
-                self.rdwrap.rd._write_register(0x36, 0x1501)
+                rdwrap.rd._write_registers(0x37, regs)
+                rdwrap.rd._write_register(0x36, 0x1501)
             self.EndModal(evt.Id)
 
     def OnButton_wxID_CANCEL(self, evt):
         # type: (wx.CommandEvent) -> None
         try:
-            with self.rdwrap.lock:
-                self.rdwrap.rd._write_registers(0x37, self.initial_regs)
+            with rdwrap.lock:
+                rdwrap.rd._write_registers(0x37, self.initial_regs)
         except:
             wx.lib.dialogs.MultiMessageBox(
                 _("An error occurred while attempting to restore calibration data"),
@@ -221,8 +219,8 @@ class DlgCalibration(rdgui_xrc.xrcdlgCalibration):
     def OnSpinctrl(self, evt):
         # type: (wx.SpinEvent) -> None
         i = self.spinctrls.index(evt.EventObject)
-        with self.rdwrap.lock:
-            self.rdwrap.rd._write_register(0x37 + i, evt.GetInt())
+        with rdwrap.lock:
+            rdwrap.rd._write_register(0x37 + i, evt.GetInt())
 
     OnSpinctrl_ctlVOutputZero = OnSpinctrl
     OnSpinctrl_ctlVOutputScale = OnSpinctrl
