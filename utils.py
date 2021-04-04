@@ -38,7 +38,7 @@ def ringbuffer_resize(ringbuffer, newcapacity):
     # type: (RingBuffer, int) -> RingBuffer
     newbuffer = RingBuffer(newcapacity, dtype=ringbuffer.dtype)
     n = min(newcapacity, len(ringbuffer))
-    newbuffer._arr[0:n] = ringbuffer[-n:]
+    newbuffer._arr[:n] = ringbuffer[-n:]
     newbuffer._right_index = n
     newbuffer._left_index = 0
     return newbuffer

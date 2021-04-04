@@ -127,6 +127,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
         port = self.config.port # type: str
         if port == "":
             with dialogs.DlgPortSelector(self) as dlg:
+                dlg = dlg # type: dialogs.DlgPortSelector
                 if dlg.ShowModal() == wx.ID_OK:
                     self.config.port = dlg.port
                     self.config.Save()
@@ -230,6 +231,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
 
     def OnMenu_wxID_OPEN(self, evt):
         with dialogs.DlgPortSelector(self) as dlg:
+            dlg = dlg # type: dialogs.DlgPortSelector
             if dlg.ShowModal() == wx.ID_OK:
                 port = dlg.port
                 rdwrap.open(port)
@@ -285,7 +287,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
         with rdwrap.lock:
             # eww, sleep holding lock
             wx.MicroSleep(int((1 - math.modf(time())[0]) * 1e6))
-            rdwrap.rd._write_registers(48, list(localtime(time()+1)[0:6]))
+            rdwrap.rd._write_registers(48, list(localtime(time()+1)[:6]))
 
     def OnMenu_ID_SETTINGS(self, evt):
         with dialogs.DlgSettings(self) as dlg:
@@ -322,6 +324,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
     def _update_firmware(self, firmware_size, read_firmware_func):
         # type: (int, Callable[[], bytes]) -> None
         with wx.ProgressDialog(_("Updating Firmware"), _("Getting firmware..."), maximum=firmware_size, parent=self, style=wx.PD_APP_MODAL) as pd:
+            pd = pd # type: wx.ProgressDialog
             firmware = read_firmware_func()
             def progress(pos):
                 pd.Update(pos, _("Updating {}/{}: {:.2f}%").format(pos, len(firmware), pos*100./len(firmware)))
