@@ -8,7 +8,7 @@ import json
 import math
 import os
 import threading
-from time import localtime, time
+from time import localtime, time, perf_counter
 import traceback
 try:
     from typing import Callable
@@ -79,19 +79,19 @@ class ReaderThread(threading.Thread, config.ConfigChangeHandler):
                     pass
                 self.command = self._Command.NONE
                 with UnlockerCtx(self.datalock):
-                    t = time()
+                    t = perf_counter()
                     if self.mock:
                         v = next(vgen)
                         a = next(agen)
                     else:
                         with rdwrap.lock:
                             v, a = rdwrap.rd.measvoltagecurrent
-                    print (time() - t, v, a)
+                    print (perf_counter() - t, v, a)
                 self.t.append(t)
                 self.v.append(v)
                 self.a.append(a)
                 if self.command == self._Command.NONE:
-                    self.commandcond.wait(max((t + self.polling_interval) - time(), 0))
+                    self.commandcond.wait(max((t + self.polling_interval) - perf_counter(), 0))
 
     def OnConfigChangeEnd(self, updates):
         dirty = False
@@ -205,7 +205,7 @@ class CanvasFrame(rdgui_xrc.xrcCanvasFrame, config.ConfigChangeHandler):
 
     def update(self, d):
         with self.reader.datalock:
-            t = np.asarray(self.reader.t) - time()
+            t = np.asarray(self.reader.t) - perf_counter()
             v = np.asarray(self.reader.v)
             a = np.asarray(self.reader.a)
             self.vline.set_data(t, v)
