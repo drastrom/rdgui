@@ -5,15 +5,14 @@ from __future__ import print_function
 
 import collections
 try:
-    from typing import Dict, Any, Protocol
+    from typing import Dict, Any
 except:
-    class Protocol(object):
-        pass
+    pass
 from weakref import WeakSet
 import wx
 
 
-class ConfigChangeHandler(Protocol):
+class ConfigChangeHandler(object):
     def __init__(self):
         super(ConfigChangeHandler, self).__init__()
 
